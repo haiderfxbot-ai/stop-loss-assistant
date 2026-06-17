@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Patterns - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary, #0a0e17);
+            color: var(--text-primary, #ffffff);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary, #111827);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color, #1f2937);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary, #ffffff);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-tertiary, #1f2937);
+        }
+
+        .header-title {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary, #ffffff);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary, #1f2937);
+        }
+
+        /* Main Content */
+        .content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Add Pattern Button */
+        .add-pattern-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .add-pattern-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .add-pattern-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: var(--bg-secondary, #111827);
+            border: 1px solid var(--border-color, #1f2937);
+            border-radius: 12px;
+            color: var(--text-primary, #ffffff);
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary, #6b7280);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary, #6b7280);
+            font-size: 16px;
+        }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            background: var(--bg-secondary, #111827);
+            border: 1px solid var(--border-color, #1f2937);
+            border-radius: 20px;
+            color: var(--text-secondary, #6b7280);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .filter-tab:hover {
+            background: var(--bg-tertiary, #1f2937);
+            color: var(--text-primary, #ffffff);
+        }
+
+        .filter-tab.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        /* Pattern Cards */
+        .pattern-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pattern-card {
+            background: var(--bg-secondary, #111827);
+            border: 1px solid var(--border-color, #1f2937);
+            border-radius: 14px;
+            padding: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .pattern-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .pattern-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .pattern-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary, #ffffff);
+            margin-bottom: 4px;
+        }
+
+        .pattern-category {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pattern-description {
+            font-size: 13px;
+            color: var(--text-secondary, #9ca3af);
+            margin-bottom: 12px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Match Score Bar */
+        .match-score-container {
+            margin-bottom: 12px;
+        }
+
+        .match-score-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .match-score-text {
+            font-size: 12px;
+            color: var(--text-secondary, #9ca3af);
+        }
+
+        .match-score-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary, #ffffff);
+        }
+
+        .match-score-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary, #374151);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .match-score-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .match-score-low {
+            background: linear-gradient(90deg, #ef4444, #f97316);
+        }
+
+        .match-score-medium {
+            background: linear-gradient(90deg, #f97316, #eab308);
+        }
+
+        .match-score-high {
+            background: linear-gradient(90deg, #22c55e, #10b981);
+        }
+
+        /* Status & Date */
+        .pattern-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .status-inactive {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+
+        .date-created {
+            font-size: 12px;
+            color: var(--text-secondary, #6b7280);
+        }
+
+        /* Action Buttons */
+        .pattern-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-view {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .btn-view:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-edit {
+            background: rgba(234, 179, 8, 0.2);
+            color: #facc15;
+        }
+
+        .btn-edit:hover {
+            background: rgba(234, 179, 8, 0.3);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-tertiary, #374151);
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: #22c55e;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            color: var(--text-secondary, #4b5563);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: var(--text-primary, #ffffff);
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: var(--text-secondary, #6b7280);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary, #111827);
+            border: 1px solid var(--border-color, #1f2937);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color, #1f2937);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary, #6b7280);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary, #ffffff);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary, #ffffff);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-tertiary, #1f2937);
+            border: 1px solid var(--border-color, #374151);
+            border-radius: 10px;
+            color: var(--text-primary, #ffffff);
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .form-select option {
+            background: var(--bg-secondary, #111827);
+            color: var(--text-primary, #ffffff);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-secondary, #6b7280);
+            margin-top: 6px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color, #1f2937);
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-tertiary, #374151);
+            color: var(--text-primary, #ffffff);
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #4b5563;
+        }
+
+        .btn-save {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Confirm Modal */
+        .confirm-modal {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .confirm-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .confirm-icon i {
+            font-size: 28px;
+            color: #f87171;
+        }
+
+        .confirm-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .confirm-message {
+            font-size: 14px;
+            color: var(--text-secondary, #9ca3af);
+            margin-bottom: 24px;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-confirm-cancel {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-tertiary, #374151);
+            color: var(--text-primary, #ffffff);
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-confirm-cancel:hover {
+            background: #4b5563;
+        }
+
+        .btn-confirm-delete {
+            flex: 1;
+            padding: 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #dc2626;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary, #111827);
+            border-top: 1px solid var(--border-color, #1f2937);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            color: var(--text-secondary, #6b7280);
+            font-size: 10px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary, #ffffff);
+        }
+
+        .nav-item.active {
+            color: #3b82f6;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-tertiary, #374151);
+            color: var(--text-primary, #ffffff);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 300;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: rgba(34, 197, 94, 0.9);
+        }
+
+        .toast.error {
+            background: rgba(239, 68, 68, 0.9);
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-tertiary, #374151);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            flex: 1;
+            background: var(--bg-secondary, #111827);
+            border: 1px solid var(--border-color, #1f2937);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary, #ffffff);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary, #6b7280);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .stats-bar {
+                flex-wrap: wrap;
+            }
+
+            .stat-item {
+                flex: 1 1 calc(50% - 6px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <button class="back-btn" onclick="window.location.href='admin-dashboard.html'">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="header-title">Manage Patterns</h1>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+        </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalPatterns">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="activePatterns">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="inactivePatterns">0</div>
+                <div class="stat-label">Inactive</div>
+            </div>
+        </div>
+
+        <!-- Add Pattern Button -->
+        <button class="add-pattern-btn" onclick="openAddModal()">
+            <i class="fas fa-plus"></i>
+            Add New Pattern
+        </button>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search patterns..." oninput="filterPatterns()">
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
+            <button class="filter-tab" onclick="setFilter('active', this)">Active</button>
+            <button class="filter-tab" onclick="setFilter('inactive', this)">Inactive</button>
+        </div>
+
+        <!-- Pattern List -->
+        <div class="pattern-list" id="patternList">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Pattern Modal -->
+    <div class="modal-overlay" id="addPatternModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Pattern</h2>
+                <button class="modal-close" onclick="closeAddModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addPatternForm" onsubmit="savePattern(event)">
+                    <div class="form-group">
+                        <label class="form-label">Pattern Name</label>
+                        <input type="text" class="form-input" id="patternName" placeholder="Enter pattern name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="patternCategory" required>
+                            <option value="">Select category</option>
+                            <option value="reversal">Reversal</option>
+                            <option value="continuation">Continuation</option>
+                            <option value="momentum">Momentum</option>
+                            <option value="volume">Volume</option>
+                            <option value="volatility">Volatility</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" id="patternDescription" placeholder="Describe the pattern..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tags</label>
+                        <input type="text" class="form-input" id="patternTags" placeholder="e.g., bullish, short-term, crypto">
+                        <div class="form-hint">Separate tags with commas</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Initial Match Score (0-100)</label>
+                        <input type="number" class="form-input" id="patternScore" min="0" max="100" value="50" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+                <button class="btn-save" onclick="document.getElementById('addPatternForm').requestSubmit()">Save Pattern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="confirm-modal">
+                <div class="confirm-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <h3 class="confirm-title">Delete Pattern?</h3>
+                <p class="confirm-message">This action cannot be undone. The pattern will be permanently removed.</p>
+                <div class="confirm-actions">
+                    <button class="btn-confirm-cancel" onclick="closeDeleteModal()">Cancel</button>
+                    <button class="btn-confirm-delete" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="admin-dashboard.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="admin-games.html" class="nav-item">
+            <i class="fas fa-gamepad"></i>
+            <span>Games</span>
+        </a>
+        <a href="admin-bot.html" class="nav-item active">
+            <i class="fas fa-robot"></i>
+            <span>Bot</span>
+        </a>
+        <a href="admin-history.html" class="nav-item">
+            <i class="fas fa-history"></i>
+            <span>History</span>
+        </a>
+        <a href="admin-profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <!-- Scripts -->
+    <script src="../shared/db.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/app.js"></script>
+    <script>
+        let allPatterns = [];
+        let currentFilter = 'all';
+        let deletePatternId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAdminAuth();
+            await loadPatterns();
+            loadTheme();
+        });
+
+        async function checkAdminAuth() {
+            try {
+                const user = await getCurrentUser();
+                if (!user || user.role !== 'admin') {
+                    window.location.href = '../login.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '../login.html';
+            }
+        }
+
+        async function loadPatterns() {
+            try {
+                const db = await openDB();
+                const transaction = db.transaction('patterns', 'readonly');
+                const store = transaction.objectStore('patterns');
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    allPatterns = request.result || [];
+                    updateStats();
+                    renderPatterns();
+                };
+
+                request.onerror = () => {
+                    allPatterns = [];
+                    renderPatterns();
+                };
+            } catch (error) {
+                console.error('Failed to load patterns:', error);
+                allPatterns = [];
+                renderPatterns();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalPatterns').textContent = allPatterns.length;
+            document.getElementById('activePatterns').textContent = allPatterns.filter(p => p.status === 'active').length;
+            document.getElementById('inactivePatterns').textContent = allPatterns.filter(p => p.status !== 'active').length;
+        }
+
+        function renderPatterns() {
+            const container = document.getElementById('patternList');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allPatterns.filter(pattern => {
+                const matchesSearch = !searchTerm ||
+                    pattern.name.toLowerCase().includes(searchTerm) ||
+                    (pattern.description && pattern.description.toLowerCase().includes(searchTerm)) ||
+                    (pattern.tags && pattern.tags.some(t => t.toLowerCase().includes(searchTerm)));
+
+                const matchesFilter = currentFilter === 'all' ||
+                    (currentFilter === 'active' && pattern.status === 'active') ||
+                    (currentFilter === 'inactive' && pattern.status !== 'active');
+
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-robot"></i>
+                        <h3>No patterns found</h3>
+                        <p>${searchTerm ? 'Try adjusting your search terms' : 'Create your first pattern to get started'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(pattern => createPatternCard(pattern)).join('');
+        }
+
+        function createPatternCard(pattern) {
+            const score = pattern.matchScore || 0;
+            const scoreClass = score < 40 ? 'match-score-low' : score < 70 ? 'match-score-medium' : 'match-score-high';
+            const isActive = pattern.status === 'active';
+            const date = pattern.createdAt ? new Date(pattern.createdAt).toLocaleDateString() : 'N/A';
+
+            return `
+                <div class="pattern-card" data-id="${pattern.id}">
+                    <div class="pattern-header">
+                        <div>
+                            <h3 class="pattern-name">${escapeHtml(pattern.name)}</h3>
+                            <span class="pattern-category">${escapeHtml(pattern.category || 'Uncategorized')}</span>
+                        </div>
+                    </div>
+                    <p class="pattern-description">${escapeHtml(pattern.description || 'No description')}</p>
+                    <div class="match-score-container">
+                        <div class="match-score-label">
+                            <span class="match-score-text">Match Score</span>
+                            <span class="match-score-value">${score}%</span>
+                        </div>
+                        <div class="match-score-bar">
+                            <div class="match-score-fill ${scoreClass}" style="width: ${score}%"></div>
+                        </div>
+                    </div>
+                    <div class="pattern-meta">
+                        <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+                            ${isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        <span class="date-created">${date}</span>
+                    </div>
+                    <div class="pattern-actions">
+                        <a href="admin-pattern-viewer.html?patternId=${pattern.id}" class="action-btn btn-view">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="admin-pattern-edit.html?patternId=${pattern.id}" class="action-btn btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <button class="action-btn btn-delete" onclick="confirmDelete('${pattern.id}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleStatus('${pattern.id}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setFilter(filter, element) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+            renderPatterns();
+        }
+
+        function filterPatterns() {
+            renderPatterns();
+        }
+
+        function openAddModal() {
+            document.getElementById('addPatternModal').classList.add('active');
+            document.getElementById('addPatternForm').reset();
+            document.getElementById('patternScore').value = 50;
+        }
+
+        function closeAddModal() {
+            document.getElementById('addPatternModal').classList.remove('active');
+        }
+
+        async function savePattern(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('patternName').value.trim();
+            const category = document.getElementById('patternCategory').value;
+            const description = document.getElementById('patternDescription').value.trim();
+            const tagsInput = document.getElementById('patternTags').value;
+            const matchScore = parseInt(document.getElementById('patternScore').value) || 50;
+
+            const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+
+            const pattern = {
+                id: 'pattern_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                name: name,
+                category: category,
+                description: description,
+                tags: tags,
+                matchScore: matchScore,
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                const db = await openDB();
+                const transaction = db.transaction('patterns', 'readwrite');
+                const store = transaction.objectStore('patterns');
+                await new Promise((resolve, reject) => {
+                    const request = store.add(pattern);
+                    request.onsuccess = resolve;
+                    request.onerror = reject;
+                });
+
+                allPatterns.push(pattern);
+                updateStats();
+                renderPatterns();
+                closeAddModal();
+                showToast('Pattern created successfully!', 'success');
+            } catch (error) {
+                console.error('Failed to save pattern:', error);
+                showToast('Failed to save pattern', 'error');
+            }
+        }
+
+        function confirmDelete(patternId) {
+            deletePatternId = patternId;
+            document.getElementById('deleteModal').classList.add('active');
+            document.getElementById('confirmDeleteBtn').onclick = deletePattern;
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            deletePatternId = null;
+        }
+
+        async function deletePattern() {
+            if (!deletePatternId) return;
+
+            try {
+                const db = await openDB();
+                const transaction = db.transaction('patterns', 'readwrite');
+                const store = transaction.objectStore('patterns');
+                await new Promise((resolve, reject) => {
+                    const request = store.delete(deletePatternId);
+                    request.onsuccess = resolve;
+                    request.onerror = reject;
+                });
+
+                allPatterns = allPatterns.filter(p => p.id !== deletePatternId);
+                updateStats();
+                renderPatterns();
+                closeDeleteModal();
+                showToast('Pattern deleted successfully!', 'success');
+            } catch (error) {
+                console.error('Failed to delete pattern:', error);
+                showToast('Failed to delete pattern', 'error');
+            }
+        }
+
+        async function toggleStatus(patternId, isActive) {
+            const pattern = allPatterns.find(p => p.id === patternId);
+            if (!pattern) return;
+
+            pattern.status = isActive ? 'active' : 'inactive';
+            pattern.updatedAt = new Date().toISOString();
+
+            try {
+                const db = await openDB();
+                const transaction = db.transaction('patterns', 'readwrite');
+                const store = transaction.objectStore('patterns');
+                await new Promise((resolve, reject) => {
+                    const request = store.put(pattern);
+                    request.onsuccess = resolve;
+                    request.onerror = reject;
+                });
+
+                updateStats();
+                renderPatterns();
+                showToast(`Pattern ${isActive ? 'activated' : 'deactivated'}`, 'success');
+            } catch (error) {
+                console.error('Failed to update status:', error);
+                showToast('Failed to update status', 'error');
+            }
+        }
+
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.getAttribute('data-theme') !== 'light';
+            body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+
+            const icon = document.querySelector('#themeToggle i');
+            icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            const icon = document.querySelector('#themeToggle i');
+            icon.className = savedTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+    </script>
+</body>
+</html>

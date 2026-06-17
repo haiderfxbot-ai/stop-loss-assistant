@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Detail - Stop Loss Assistant</title>
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../shared/db.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/app.js"></script>
+    <style>
+        body {
+            background: var(--bg-primary, #0f1117);
+            color: var(--text-primary, #ffffff);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-secondary, #1a1d26);
+            border-bottom: 1px solid var(--border-color, #2a2d36);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary, #ffffff);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 12px;
+            transition: opacity 0.2s;
+        }
+
+        .back-btn:hover {
+            opacity: 0.7;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 16px;
+        }
+
+        .detail-card {
+            background: var(--bg-secondary, #1a1d26);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color, #2a2d36);
+        }
+
+        .detail-row {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color, #2a2d36);
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: var(--text-secondary, #8b8d94);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .detail-value {
+            font-size: 15px;
+            color: var(--text-primary, #ffffff);
+            word-break: break-word;
+        }
+
+        .detail-value.mono {
+            font-family: monospace;
+            font-size: 13px;
+            background: var(--bg-primary, #0f1117);
+            padding: 10px 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .action-badge.login {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .action-badge.logout {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+        }
+
+        .action-badge.failed-login {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .action-badge.create {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+        }
+
+        .action-badge.update {
+            background: rgba(234, 179, 8, 0.15);
+            color: #facc15;
+        }
+
+        .action-badge.delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .action-badge.view {
+            background: rgba(139, 92, 246, 0.15);
+            color: #a78bfa;
+        }
+
+        .action-badge.default {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+        }
+
+        .back-bottom {
+            margin-top: 24px;
+            padding: 14px;
+            background: var(--bg-secondary, #1a1d26);
+            border-radius: 12px;
+            border: 1px solid var(--border-color, #2a2d36);
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-primary, #ffffff);
+            font-size: 15px;
+            font-weight: 500;
+            display: block;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .back-bottom:hover {
+            background: var(--bg-tertiary, #252830);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 16px;
+            color: var(--text-secondary, #8b8d94);
+        }
+
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 12px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px 16px;
+            color: #f87171;
+        }
+
+        .error-message i {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <button class="back-btn" onclick="window.location.href='admin-history.html'">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="header-title">Log Detail</h1>
+    </header>
+
+    <main class="content">
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner"></i>
+            <p>Loading log details...</p>
+        </div>
+
+        <div id="error" class="error-message" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p id="error-text">Log not found</p>
+        </div>
+
+        <div id="detail-card" class="detail-card" style="display: none;"></div>
+
+        <a href="admin-history.html" class="back-bottom">
+            <i class="fas fa-arrow-left"></i> Back to History
+        </a>
+    </main>
+
+    <script>
+        async function validateAdminAccess() {
+            try {
+                if (typeof auth !== 'undefined' && auth.isAdmin) {
+                    return true;
+                }
+                if (typeof app !== 'undefined' && app.isAdmin) {
+                    return true;
+                }
+                window.location.href = '../index.html';
+                return false;
+            } catch (e) {
+                window.location.href = '../index.html';
+                return false;
+            }
+        }
+
+        async function getLog(logId) {
+            try {
+                if (typeof db !== 'undefined') {
+                    const auditLog = await db.get('auditLogs', logId);
+                    if (auditLog) return auditLog;
+
+                    const loginLog = await db.get('loginHistory', logId);
+                    if (loginLog) return loginLog;
+                }
+                return null;
+            } catch (e) {
+                console.error('Error fetching log:', e);
+                return null;
+            }
+        }
+
+        function getActionBadgeClass(action) {
+            if (!action) return 'default';
+            const lower = action.toLowerCase();
+            if (lower.includes('login') && !lower.includes('fail')) return 'login';
+            if (lower.includes('logout')) return 'logout';
+            if (lower.includes('fail')) return 'failed-login';
+            if (lower.includes('create') || lower.includes('add')) return 'create';
+            if (lower.includes('update') || lower.includes('edit') || lower.includes('modify')) return 'update';
+            if (lower.includes('delete') || lower.includes('remove')) return 'delete';
+            if (lower.includes('view') || lower.includes('read')) return 'view';
+            return 'default';
+        }
+
+        function formatDate(dateInput) {
+            if (!dateInput) return 'N/A';
+            try {
+                const date = new Date(dateInput);
+                return date.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+            } catch (e) {
+                return String(dateInput);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderDetailCard(log) {
+            const badgeClass = getActionBadgeClass(log.action || log.type || log.eventType);
+
+            let html = `
+                <div class="detail-row">
+                    <div class="detail-label">Log ID</div>
+                    <div class="detail-value mono">${escapeHtml(String(log.id || log.logId || 'N/A'))}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Timestamp</div>
+                    <div class="detail-value">${formatDate(log.timestamp || log.date || log.createdAt)}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">User ID</div>
+                    <div class="detail-value mono">${escapeHtml(String(log.userId || log.uid || 'N/A'))}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Username</div>
+                    <div class="detail-value">${escapeHtml(log.username || log.user || log.userName || 'N/A')}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Action Type</div>
+                    <div class="detail-value">
+                        <span class="action-badge ${badgeClass}">${escapeHtml(log.action || log.type || log.eventType || 'N/A')}</span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-value">${escapeHtml(log.description || log.details || log.message || 'No description available')}</div>
+                </div>
+            `;
+
+            if (log.userAgent || log.userAgentString) {
+                html += `
+                    <div class="detail-row">
+                        <div class="detail-label">User Agent</div>
+                        <div class="detail-value mono">${escapeHtml(log.userAgent || log.userAgentString)}</div>
+                    </div>
+                `;
+            }
+
+            const additionalDetails = log.additionalData || log.extra || log.metadata;
+            if (additionalDetails) {
+                let detailsStr;
+                if (typeof additionalDetails === 'object') {
+                    try {
+                        detailsStr = JSON.stringify(additionalDetails, null, 2);
+                    } catch (e) {
+                        detailsStr = String(additionalDetails);
+                    }
+                } else {
+                    detailsStr = String(additionalDetails);
+                }
+                html += `
+                    <div class="detail-row">
+                        <div class="detail-label">Additional Details</div>
+                        <div class="detail-value mono">${escapeHtml(detailsStr)}</div>
+                    </div>
+                `;
+            }
+
+            if (log.ip || log.ipAddress) {
+                html += `
+                    <div class="detail-row">
+                        <div class="detail-label">IP Address</div>
+                        <div class="detail-value mono">${escapeHtml(log.ip || log.ipAddress)}</div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        async function init() {
+            await validateAdminAccess();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const logId = urlParams.get('logId') || urlParams.get('id');
+
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const detailCardEl = document.getElementById('detail-card');
+
+            if (!logId) {
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                document.getElementById('error-text').textContent = 'No log ID provided';
+                return;
+            }
+
+            const log = await getLog(logId);
+
+            loadingEl.style.display = 'none';
+
+            if (!log) {
+                errorEl.style.display = 'block';
+                document.getElementById('error-text').textContent = 'Log not found';
+                return;
+            }
+
+            detailCardEl.style.display = 'block';
+            detailCardEl.innerHTML = renderDetailCard(log);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

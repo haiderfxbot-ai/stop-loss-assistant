@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>History Details</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding-bottom: 20px;
+        }
+
+        .header {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #00d9ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px 20px;
+            color: #ff6b6b;
+        }
+
+        .history-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .game-type {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .result-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .result-win {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+        }
+
+        .result-lose {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .result-draw {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .amount-win {
+            color: #2ed573;
+        }
+
+        .amount-lose {
+            color: #ff6b6b;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #00d9ff;
+            border-radius: 2px;
+        }
+
+        .signal-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .signal-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00d9ff;
+            margin-bottom: 10px;
+        }
+
+        .signal-description {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .notes-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notes-content {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .no-notes {
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+        }
+
+        .created-info {
+            text-align: center;
+            padding: 15px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
+
+        .datetime-display {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 217, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .datetime-date {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .datetime-time {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <span class="header-title">History Details</span>
+    </div>
+
+    <div class="container" id="content">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading history record...</p>
+        </div>
+    </div>
+
+    <script>
+        let db;
+        const DB_NAME = 'StopLossDB';
+        const DB_VERSION = 1;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains('history')) {
+                        const store = database.createObjectStore('history', { keyPath: 'id' });
+                        store.createIndex('createdAt', 'createdAt', { unique: false });
+                    }
+                };
+            });
+        }
+
+        function validateSession() {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'user-login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function getHistoryId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('historyId');
+        }
+
+        async function loadHistory(historyId) {
+            if (!historyId) {
+                showError('No history ID provided');
+                return;
+            }
+
+            try {
+                await initDB();
+                
+                const transaction = db.transaction(['history'], 'readonly');
+                const store = transaction.objectStore('history');
+                const request = store.get(historyId);
+
+                request.onsuccess = () => {
+                    if (request.result) {
+                        displayHistory(request.result);
+                    } else {
+                        showError('History record not found');
+                    }
+                };
+
+                request.onerror = () => {
+                    showError('Failed to load history record');
+                };
+            } catch (error) {
+                showError('Error loading history record');
+            }
+        }
+
+        function displayHistory(record) {
+            const content = document.getElementById('content');
+            
+            const createdDate = record.createdAt ? new Date(record.createdAt) : new Date();
+            const dateStr = createdDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const timeStr = createdDate.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            const amount = record.amount || 0;
+            const result = record.result || 'unknown';
+            const resultClass = result === 'win' ? 'result-win' : 
+                               result === 'lose' ? 'result-lose' : 'result-draw';
+
+            content.innerHTML = `
+                <div class="datetime-display">
+                    <div class="datetime-date">${dateStr}</div>
+                    <div class="datetime-time">${timeStr}</div>
+                </div>
+
+                <div class="history-card">
+                    <div class="history-header">
+                        <div>
+                            <h1 class="game-type">${escapeHtml(record.gameType || record.type || 'Unknown Game')}</h1>
+                        </div>
+                        <span class="result-badge ${resultClass}">
+                            ${result.toUpperCase()}
+                        </span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="info-label">Game Type</span>
+                        <span class="info-value">${escapeHtml(record.gameType || record.type || 'Unknown')}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Date & Time</span>
+                        <span class="info-value">${dateStr} ${timeStr}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Result</span>
+                        <span class="info-value" style="color: ${result === 'win' ? '#2ed573' : result === 'lose' ? '#ff6b6b' : '#ffc107'}">
+                            ${result.charAt(0).toUpperCase() + result.slice(1)}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Amount</span>
+                        <span class="info-value ${result === 'win' ? 'amount-win' : 'amount-lose'}">
+                            ${result === 'win' ? '+' : result === 'lose' ? '-' : ''}$${Math.abs(amount).toFixed(2)}
+                        </span>
+                    </div>
+                    ${record.betAmount ? `
+                        <div class="info-row">
+                            <span class="info-label">Bet Amount</span>
+                            <span class="info-value">$${parseFloat(record.betAmount).toFixed(2)}</span>
+                        </div>
+                    ` : ''}
+                    ${record.payout ? `
+                        <div class="info-row">
+                            <span class="info-label">Payout</span>
+                            <span class="info-value">$${parseFloat(record.payout).toFixed(2)}</span>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="signal-card">
+                    <h2 class="section-title">Signal Used</h2>
+                    <div class="signal-name">${escapeHtml(record.signalName || record.signal || 'No Signal')}</div>
+                    ${record.signalDescription ? `
+                        <p class="signal-description">${escapeHtml(record.signalDescription)}</p>
+                    ` : ''}
+                    ${record.patternUsed ? `
+                        <div class="info-row" style="margin-top: 10px;">
+                            <span class="info-label">Pattern Used</span>
+                            <span class="info-value">${escapeHtml(record.patternUsed)}</span>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="notes-card">
+                    <h2 class="section-title">Detailed Notes</h2>
+                    <div class="notes-content">
+                        ${record.notes ? escapeHtml(record.notes) : '<span class="no-notes">No notes added for this record</span>'}
+                    </div>
+                </div>
+
+                ${record.multiplier ? `
+                    <div class="history-card">
+                        <div class="info-row">
+                            <span class="info-label">Multiplier</span>
+                            <span class="info-value">${record.multiplier}x</span>
+                        </div>
+                        ${record.cashoutAt ? `
+                            <div class="info-row">
+                                <span class="info-label">Cashout At</span>
+                                <span class="info-value">${record.cashoutAt}x</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+
+                <div class="created-info">
+                    Record ID: ${record.id}
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="error">
+                    <p>${message}</p>
+                    <button class="back-btn" style="margin: 20px auto; width: auto; padding: 10px 20px;" onclick="goBack()">Go Back</button>
+                </div>
+            `;
+        }
+
+        function goBack() {
+            window.location.href = 'user-history.html';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!validateSession()) return;
+            
+            const historyId = getHistoryId();
+            loadHistory(historyId);
+        });
+    </script>
+</body>
+</html>

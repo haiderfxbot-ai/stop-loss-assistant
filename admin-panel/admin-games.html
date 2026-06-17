@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Games - Admin Panel</title>
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary, #0a0e1a);
+      color: var(--text-primary, #ffffff);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--bg-secondary, #111827);
+      border-bottom: 1px solid var(--border-color, #1e293b);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top-bar .left { display: flex; align-items: center; gap: 12px; }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-primary, #fff);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .top-bar h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: var(--text-primary, #fff);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .add-game-section {
+      padding: 16px;
+    }
+
+    .add-game-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent, #22c55e);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .games-list {
+      padding: 0 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .game-card {
+      background: var(--bg-secondary, #111827);
+      border: 1px solid var(--border-color, #1e293b);
+      border-radius: 12px;
+      padding: 16px;
+      transition: transform 0.15s;
+    }
+
+    .game-card:active { transform: scale(0.98); }
+
+    .game-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .game-card-header .left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .game-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: var(--bg-tertiary, #1e293b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .game-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .game-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .game-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .game-desc {
+      font-size: 13px;
+      color: var(--text-secondary, #9ca3af);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+
+    .status-badge.active {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .status-badge.inactive {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .game-card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color, #1e293b);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color, #1e293b);
+      background: var(--bg-tertiary, #1a2332);
+      color: var(--text-primary, #fff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .action-btn:hover { background: var(--bg-hover, #2a3a4e); }
+    .action-btn.delete:hover { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 26px;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--bg-tertiary, #1e293b);
+      border-radius: 26px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: var(--accent, #22c55e);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(22px);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary, #111827);
+      border-top: 1px solid var(--border-color, #1e293b);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      text-decoration: none;
+      color: var(--text-secondary, #9ca3af);
+      font-size: 10px;
+      padding: 4px 12px;
+      transition: color 0.15s;
+    }
+
+    .nav-item.active { color: var(--accent, #22c55e); }
+    .nav-item i { font-size: 20px; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--bg-secondary, #111827);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      animation: slideUp 0.25s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary, #9ca3af);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary, #9ca3af);
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-tertiary, #1a2332);
+      border: 1px solid var(--border-color, #1e293b);
+      border-radius: 10px;
+      color: var(--text-primary, #fff);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--accent, #22c55e);
+    }
+
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group select option { background: var(--bg-secondary, #111827); }
+
+    .form-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent, #22c55e);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .confirm-modal .modal {
+      max-width: 360px;
+      border-radius: 16px;
+      text-align: center;
+      margin: auto;
+      animation: none;
+    }
+
+    .confirm-modal .modal h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .confirm-modal .modal p {
+      color: var(--text-secondary, #9ca3af);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .confirm-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .confirm-actions .cancel-btn {
+      background: var(--bg-tertiary, #1e293b);
+      color: var(--text-primary, #fff);
+    }
+
+    .confirm-actions .delete-confirm-btn {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary, #9ca3af);
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+    }
+
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border-color, #1e293b);
+      border-top-color: var(--accent, #22c55e);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .search-bar {
+      padding: 0 16px 12px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      background: var(--bg-secondary, #111827);
+      border: 1px solid var(--border-color, #1e293b);
+      border-radius: 10px;
+      color: var(--text-primary, #fff);
+      font-size: 14px;
+      outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%239ca3af' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 12px center;
+    }
+
+    .search-bar input::placeholder { color: var(--text-secondary, #6b7280); }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="left">
+      <button class="back-btn" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1>Manage Games</h1>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
+  <!-- Add Game Button -->
+  <div class="add-game-section">
+    <button class="add-game-btn" onclick="openAddModal()">
+      <i class="fas fa-plus"></i>
+      Add Game
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search games..." oninput="filterGames()">
+  </div>
+
+  <!-- Games List -->
+  <div class="games-list" id="gamesList">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Game Modal -->
+  <div class="modal-overlay" id="gameModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Game</h2>
+        <button class="modal-close" onclick="closeModal('gameModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="gameForm" onsubmit="saveGame(event)">
+        <input type="hidden" id="editGameId">
+        <div class="form-group">
+          <label>Game Name</label>
+          <input type="text" id="gameName" placeholder="Enter game name" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="gameDesc" placeholder="Enter game description"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="gameCategory">
+            <option value="sports">Sports</option>
+            <option value="casino">Casino</option>
+            <option value="esports">E-Sports</option>
+            <option value="virtual">Virtual</option>
+            <option value="lottery">Lottery</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Image URL (optional)</label>
+          <input type="text" id="gameImage" placeholder="https://...">
+        </div>
+        <div class="form-group form-toggle">
+          <label>Status (Active)</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="gameStatus" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <button type="submit" class="save-btn">Save Game</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="modal-overlay confirm-modal" id="confirmModal">
+    <div class="modal">
+      <h3>Delete Game?</h3>
+      <p>This action cannot be undone. The game and all related data will be permanently removed.</p>
+      <div class="confirm-actions">
+        <button class="cancel-btn" onclick="closeModal('confirmModal')">Cancel</button>
+        <button class="delete-confirm-btn" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="admin-dashboard.html" class="nav-item">
+      <i class="fas fa-home"></i>
+      <span>Home</span>
+    </a>
+    <a href="admin-games.html" class="nav-item active">
+      <i class="fas fa-gamepad"></i>
+      <span>Games</span>
+    </a>
+    <a href="admin-bot.html" class="nav-item">
+      <i class="fas fa-robot"></i>
+      <span>Bot</span>
+    </a>
+    <a href="admin-history.html" class="nav-item">
+      <i class="fas fa-clock-rotate-left"></i>
+      <span>History</span>
+    </a>
+    <a href="admin-profile.html" class="nav-item">
+      <i class="fas fa-user"></i>
+      <span>Profile</span>
+    </a>
+  </div>
+
+  <script src="../shared/db.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    let allGames = [];
+    let pendingDeleteId = null;
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+      const icon = document.querySelector('.theme-toggle i');
+      if (document.body.classList.contains('light-theme')) {
+        icon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+      }
+    }
+
+    function openAddModal() {
+      document.getElementById('modalTitle').textContent = 'Add Game';
+      document.getElementById('gameForm').reset();
+      document.getElementById('editGameId').value = '';
+      document.getElementById('gameStatus').checked = true;
+      document.getElementById('gameModal').classList.add('active');
+    }
+
+    function openEditModal(gameId) {
+      const game = allGames.find(g => g.id === gameId);
+      if (!game) return;
+      document.getElementById('modalTitle').textContent = 'Edit Game';
+      document.getElementById('editGameId').value = game.id;
+      document.getElementById('gameName').value = game.name || '';
+      document.getElementById('gameDesc').value = game.description || '';
+      document.getElementById('gameCategory').value = game.category || 'other';
+      document.getElementById('gameImage').value = game.image || '';
+      document.getElementById('gameStatus').checked = game.status !== false;
+      document.getElementById('gameModal').classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    async function saveGame(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editGameId').value;
+      const gameData = {
+        name: document.getElementById('gameName').value.trim(),
+        description: document.getElementById('gameDesc').value.trim(),
+        category: document.getElementById('gameCategory').value,
+        image: document.getElementById('gameImage').value.trim(),
+        status: document.getElementById('gameStatus').checked,
+        updatedAt: new Date().toISOString()
+      };
+
+      try {
+        if (typeof db !== 'undefined' && db.games) {
+          if (editId) {
+            gameData.id = editId;
+            await db.games.put(gameData);
+          } else {
+            gameData.id = 'game_' + Date.now();
+            gameData.createdAt = new Date().toISOString();
+            await db.games.add(gameData);
+          }
+        } else if (typeof window.db !== 'undefined' && window.db.objectStoreNames && window.db.objectStoreNames.contains('games')) {
+          const tx = window.db.transaction('games', 'readwrite');
+          const store = tx.objectStore('games');
+          if (editId) {
+            gameData.id = editId;
+            store.put(gameData);
+          } else {
+            gameData.id = 'game_' + Date.now();
+            gameData.createdAt = new Date().toISOString();
+            store.add(gameData);
+          }
+          await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          });
+        }
+        closeModal('gameModal');
+        loadGames();
+      } catch (err) {
+        console.error('Save game error:', err);
+        alert('Failed to save game. Please try again.');
+      }
+    }
+
+    function confirmDelete(gameId) {
+      pendingDeleteId = gameId;
+      document.getElementById('confirmModal').classList.add('active');
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+      if (!pendingDeleteId) return;
+      try {
+        if (typeof db !== 'undefined' && db.games) {
+          await db.games.delete(pendingDeleteId);
+        } else if (typeof window.db !== 'undefined' && window.db.objectStoreNames && window.db.objectStoreNames.contains('games')) {
+          const tx = window.db.transaction('games', 'readwrite');
+          tx.objectStore('games').delete(pendingDeleteId);
+          await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          });
+        }
+        closeModal('confirmModal');
+        pendingDeleteId = null;
+        loadGames();
+      } catch (err) {
+        console.error('Delete game error:', err);
+        alert('Failed to delete game.');
+      }
+    });
+
+    async function toggleGameStatus(gameId, enabled) {
+      const game = allGames.find(g => g.id === gameId);
+      if (!game) return;
+      game.status = enabled;
+      game.updatedAt = new Date().toISOString();
+      try {
+        if (typeof db !== 'undefined' && db.games) {
+          await db.games.put(game);
+        } else if (typeof window.db !== 'undefined' && window.db.objectStoreNames && window.db.objectStoreNames.contains('games')) {
+          const tx = window.db.transaction('games', 'readwrite');
+          tx.objectStore('games').put(game);
+          await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          });
+        }
+        loadGames();
+      } catch (err) {
+        console.error('Toggle status error:', err);
+      }
+    }
+
+    function renderGames(games) {
+      const container = document.getElementById('gamesList');
+      if (!games || games.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-gamepad"></i>
+            <p>No games found</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = games.map(game => {
+        const isActive = game.status !== false;
+        const icon = game.image
+          ? `<img src="${game.image}" alt="${game.name}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-dice\\'></i>'">`
+          : '<i class="fas fa-dice"></i>';
+
+        return `
+          <div class="game-card" data-game-id="${game.id}">
+            <div class="game-card-header">
+              <div class="left">
+                <div class="game-icon">${icon}</div>
+                <div class="game-info">
+                  <div class="game-name">${escapeHtml(game.name)}</div>
+                  <div class="game-desc">${escapeHtml(game.description || 'No description')}</div>
+                </div>
+              </div>
+              <span class="status-badge ${isActive ? 'active' : 'inactive'}">
+                ${isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+            <div class="game-card-actions">
+              <div class="action-buttons">
+                <a href="admin-viewer.html?gameId=${game.id}" class="action-btn" title="View">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <button class="action-btn" title="Edit" onclick="openEditModal('${game.id}')">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button class="action-btn delete" title="Delete" onclick="confirmDelete('${game.id}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleGameStatus('${game.id}', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function filterGames() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (!query) {
+        renderGames(allGames);
+        return;
+      }
+      const filtered = allGames.filter(g =>
+        (g.name && g.name.toLowerCase().includes(query)) ||
+        (g.description && g.description.toLowerCase().includes(query)) ||
+        (g.category && g.category.toLowerCase().includes(query))
+      );
+      renderGames(filtered);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    async function loadGames() {
+      const container = document.getElementById('gamesList');
+      container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+      try {
+        let games = [];
+        if (typeof db !== 'undefined' && db.games) {
+          games = await db.games.toArray ? await db.games.toArray() : await db.games.all();
+        } else if (typeof window.db !== 'undefined' && window.db.objectStoreNames && window.db.objectStoreNames.contains('games')) {
+          const tx = window.db.transaction('games', 'readonly');
+          const store = tx.objectStore('games');
+          games = await new Promise((resolve, reject) => {
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+          });
+        }
+        allGames = games || [];
+        renderGames(allGames);
+      } catch (err) {
+        console.error('Load games error:', err);
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load games</p>
+          </div>`;
+      }
+    }
+
+    async function checkAdmin() {
+      try {
+        if (typeof requireAuth === 'function') {
+          const user = await requireAuth();
+          if (user && user.role !== 'admin') {
+            window.location.href = '../login.html';
+            return;
+          }
+        } else if (typeof getCurrentUser === 'function') {
+          const user = await getCurrentUser();
+          if (!user || user.role !== 'admin') {
+            window.location.href = '../login.html';
+            return;
+          }
+        } else {
+          const stored = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+          if (!stored) {
+            window.location.href = '../login.html';
+            return;
+          }
+          const user = JSON.parse(stored);
+          if (user.role !== 'admin') {
+            window.location.href = '../login.html';
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location.href = '../login.html';
+        return;
+      }
+      loadGames();
+    }
+
+    document.addEventListener('DOMContentLoaded', checkAdmin);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Mines - Stop Loss Assistant</title>
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .mines-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .mines-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .back-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .back-btn:hover { background: var(--bg-card-hover); color: #f97316; }
+    .mines-header-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #f97316;
+      letter-spacing: -0.3px;
+    }
+    .mines-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .header-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
+
+    .game-container {
+      padding: 0 0 100px;
+    }
+
+    .mines-info-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .mines-info-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .mines-info-item i { color: #f97316; font-size: 12px; }
+    .mines-info-value {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .mines-grid-area {
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .mines-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      width: 100%;
+      max-width: 360px;
+      aspect-ratio: 1;
+    }
+    .mine-tile {
+      position: relative;
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      perspective: 600px;
+      aspect-ratio: 1;
+    }
+    .mine-tile::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .mine-tile:not(.revealed):not(.disabled):hover {
+      transform: translateY(-2px);
+      border-color: rgba(249, 115, 22, 0.4);
+      box-shadow: 0 4px 16px rgba(249, 115, 22, 0.15);
+    }
+    .mine-tile:not(.revealed):not(.disabled):active {
+      transform: translateY(0);
+    }
+    .mine-tile.disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .tile-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .mine-tile.flipped .tile-inner {
+      transform: rotateY(180deg);
+    }
+
+    .tile-front, .tile-back {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: var(--radius);
+    }
+    .tile-front {
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+    }
+    .tile-front i {
+      font-size: 20px;
+      color: var(--text-muted);
+      opacity: 0.4;
+      transition: var(--transition);
+    }
+    .mine-tile:not(.revealed):not(.disabled):hover .tile-front i {
+      opacity: 0.7;
+      color: #f97316;
+    }
+
+    .tile-back {
+      transform: rotateY(180deg);
+    }
+    .tile-back.gem {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+      border: 2px solid rgba(34, 197, 94, 0.4);
+    }
+    .tile-back.gem i {
+      font-size: 24px;
+      color: #22c55e;
+      filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.5));
+    }
+    .tile-back.mine {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+      border: 2px solid rgba(239, 68, 68, 0.4);
+    }
+    .tile-back.mine i {
+      font-size: 24px;
+      color: #ef4444;
+      filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.5));
+    }
+    .tile-back.safe-gem {
+      background: linear-gradient(135deg, rgba(100, 116, 139, 0.1), rgba(100, 116, 139, 0.03));
+      border: 2px solid rgba(100, 116, 139, 0.2);
+    }
+    .tile-back.safe-gem i {
+      font-size: 20px;
+      color: #64748b;
+      opacity: 0.5;
+    }
+
+    @keyframes gemSparkle {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.5)); }
+      50% { filter: drop-shadow(0 0 14px rgba(34, 197, 94, 0.8)) drop-shadow(0 0 20px rgba(34, 197, 94, 0.3)); }
+    }
+    .mine-tile.gem-reveal .tile-back.gem i {
+      animation: gemSparkle 1.2s ease infinite;
+    }
+
+    @keyframes mineExplode {
+      0% { transform: rotateY(180deg) scale(1); }
+      25% { transform: rotateY(180deg) scale(1.15); }
+      50% { transform: rotateY(180deg) scale(0.95); }
+      75% { transform: rotateY(180deg) scale(1.05); }
+      100% { transform: rotateY(180deg) scale(1); }
+    }
+    .mine-tile.mine-reveal .tile-back.mine i {
+      animation: mineExplode 0.5s ease;
+    }
+
+    .mine-tile.mine-reveal .tile-back.mine {
+      border-color: rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+
+    @keyframes mineFlash {
+      0%, 50%, 100% { background: var(--bg-card); }
+      25%, 75% { background: rgba(239, 68, 68, 0.08); }
+    }
+    .game-grid.shake {
+      animation: gridShake 0.5s ease;
+    }
+    @keyframes gridShake {
+      0%, 100% { transform: translateX(0); }
+      10% { transform: translateX(-4px) rotate(-0.5deg); }
+      20% { transform: translateX(4px) rotate(0.5deg); }
+      30% { transform: translateX(-3px); }
+      40% { transform: translateX(3px); }
+      50% { transform: translateX(-2px); }
+      60% { transform: translateX(2px); }
+    }
+
+    .game-controls {
+      padding: 0 16px 16px;
+    }
+
+    .multiplier-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .multiplier-current {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .multiplier-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(249, 115, 22, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f97316;
+      font-size: 16px;
+    }
+    .multiplier-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .multiplier-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #f97316;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+    .multiplier-value.win {
+      color: #22c55e;
+    }
+    .multiplier-value.lose {
+      color: #ef4444;
+    }
+    .multiplier-potential {
+      text-align: right;
+    }
+    .potential-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .potential-amount {
+      font-size: 18px;
+      font-weight: 800;
+      color: #22c55e;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bet-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .bet-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .bet-input-wrap label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .bet-input {
+      width: 100%;
+      padding: 12px 14px;
+      padding-left: 30px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      transition: var(--transition);
+    }
+    .bet-input:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+    }
+    .bet-currency {
+      position: absolute;
+      bottom: 12px;
+      left: 10px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .bet-quick-btns {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .bet-quick {
+      flex: 1;
+      padding: 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .bet-quick:hover { border-color: #f97316; color: #f97316; }
+
+    .mines-count-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .mines-count-wrap {
+      flex: 1;
+    }
+    .mines-count-wrap label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .mines-count-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      transition: var(--transition);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .mines-count-input:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+    }
+    .mines-count-select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      transition: var(--transition);
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    .mines-count-select:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+    }
+
+    .play-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 17px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+    .play-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .play-btn.start {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(249, 115, 22, 0.35);
+    }
+    .play-btn.start:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(249, 115, 22, 0.45);
+    }
+    .play-btn.start:active { transform: translateY(0); }
+    .play-btn.start:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .play-btn.cashout {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
+      animation: cashoutPulse 0.8s ease infinite;
+    }
+    .play-btn.cashout:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(34, 197, 94, 0.45);
+    }
+    .play-btn.crashed {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+    }
+    .play-btn.waiting {
+      background: linear-gradient(135deg, #64748b, #475569);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(100, 116, 139, 0.35);
+    }
+
+    @keyframes cashoutPulse {
+      0%, 100% { box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35); }
+      50% { box-shadow: 0 6px 30px rgba(34, 197, 94, 0.55); }
+    }
+
+    .result-banner {
+      display: none;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+      animation: bannerSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .result-banner.win {
+      display: block;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
+    }
+    .result-banner.loss {
+      display: block;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    @keyframes bannerSlideIn {
+      from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title i { font-size: 12px; color: #f97316; }
+
+    .balance-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .balance-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .balance-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #22c55e;
+      font-size: 16px;
+    }
+    .balance-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .balance-amount {
+      font-size: 20px;
+      font-weight: 800;
+      color: #22c55e;
+    }
+
+    .history-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 0 8px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin-bottom: 16px;
+    }
+    .history-scroll::-webkit-scrollbar { display: none; }
+
+    .history-chip {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid;
+      transition: var(--transition);
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .history-chip.win {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.25);
+      color: #22c55e;
+    }
+    .history-chip.loss {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #ef4444;
+    }
+
+    .pattern-signal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .pattern-signal::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(180deg, #8b5cf6, #3b82f6);
+      border-radius: 0 3px 3px 0;
+    }
+    .pattern-signal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .pattern-signal-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--purple);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pattern-signal-badge {
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--purple);
+    }
+    .pattern-signal-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .pattern-signal-recommendation {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pattern-signal-recommendation .score {
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .activity-log {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+    }
+    .activity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .activity-dot.win { background: #22c55e; }
+    .activity-dot.loss { background: #ef4444; }
+    .activity-dot.info { background: #3b82f6; }
+    .activity-text {
+      flex: 1;
+      color: var(--text-secondary);
+    }
+    .activity-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .empty-activity {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .game-content {
+      padding: 16px;
+    }
+
+    .confetti-container {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 6;
+    }
+    .confetti {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      opacity: 0;
+    }
+
+    .win-flash {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(34, 197, 94, 0.2), transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .win-flash.active {
+      animation: winFlash 0.6s ease forwards;
+    }
+    @keyframes winFlash {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .loss-flash {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(239, 68, 68, 0.2), transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .loss-flash.active {
+      animation: lossFlash 0.6s ease forwards;
+    }
+    @keyframes lossFlash {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 64px;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 600;
+      transition: var(--transition);
+      border-radius: var(--radius-sm);
+      min-width: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item i { font-size: 20px; transition: var(--transition); }
+    .nav-item:hover { color: var(--accent); }
+    .nav-item.active { color: var(--accent); }
+    .nav-item.active i { transform: scale(1.15); }
+
+    @media (min-width: 480px) {
+      .mines-grid { max-width: 400px; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="app">
+    <header class="mines-header">
+      <div class="mines-header-left">
+        <button class="back-btn" onclick="window.location.href='user-games.html'" title="Back to Games">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="mines-header-title">Mines</span>
+      </div>
+      <div class="mines-header-right">
+        <button class="header-btn" id="themeToggle" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="game-container">
+      <div class="mines-info-bar">
+        <div class="mines-info-item">
+          <i class="fas fa-bomb"></i>
+          <span>Mines: </span>
+          <span class="mines-info-value" id="minesCountDisplay">3</span>
+        </div>
+        <div class="mines-info-item">
+          <i class="fas fa-gem"></i>
+          <span>Gems: </span>
+          <span class="mines-info-value" id="gemsCountDisplay">22</span>
+        </div>
+        <div class="mines-info-item">
+          <i class="fas fa-chart-line"></i>
+          <span>Multiplier: </span>
+          <span class="mines-info-value" id="baseMultiplierDisplay">1.45x</span>
+        </div>
+      </div>
+
+      <div class="mines-grid-area">
+        <div class="mines-grid game-grid" id="minesGrid"></div>
+      </div>
+
+      <div class="game-content">
+        <div class="result-banner" id="resultBanner"></div>
+
+        <div class="multiplier-bar" id="multiplierBar">
+          <div class="multiplier-current">
+            <div class="multiplier-icon"><i class="fas fa-multiply"></i></div>
+            <div>
+              <div class="multiplier-label">Current Multiplier</div>
+              <div class="multiplier-value" id="currentMultiplier">1.00x</div>
+            </div>
+          </div>
+          <div class="multiplier-potential">
+            <div class="potential-label">Potential Win</div>
+            <div class="potential-amount" id="potentialWin">$0.00</div>
+          </div>
+        </div>
+
+        <div class="bet-section">
+          <div class="bet-input-wrap">
+            <label>Bet Amount</label>
+            <span class="bet-currency">$</span>
+            <input type="number" class="bet-input" id="betAmount" value="10" min="1" max="10000" step="1">
+            <div class="bet-quick-btns">
+              <button class="bet-quick" onclick="setBet(5)">$5</button>
+              <button class="bet-quick" onclick="setBet(10)">$10</button>
+              <button class="bet-quick" onclick="setBet(25)">$25</button>
+              <button class="bet-quick" onclick="setBet(50)">$50</button>
+              <button class="bet-quick" onclick="setBet(100)">$100</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mines-count-section">
+          <div class="mines-count-wrap">
+            <label>Number of Mines</label>
+            <select class="mines-count-select" id="minesCount">
+              <option value="3">3 Mines</option>
+              <option value="4">4 Mines</option>
+              <option value="5">5 Mines</option>
+              <option value="6">6 Mines</option>
+              <option value="7">7 Mines</option>
+              <option value="8">8 Mines</option>
+              <option value="9">9 Mines</option>
+              <option value="10">10 Mines</option>
+              <option value="11">11 Mines</option>
+              <option value="12">12 Mines</option>
+              <option value="13">13 Mines</option>
+              <option value="14">14 Mines</option>
+              <option value="15">15 Mines</option>
+              <option value="16">16 Mines</option>
+              <option value="17">17 Mines</option>
+              <option value="18">18 Mines</option>
+              <option value="19">19 Mines</option>
+              <option value="20">20 Mines</option>
+              <option value="21">21 Mines</option>
+              <option value="22">22 Mines</option>
+              <option value="23">23 Mines</option>
+              <option value="24">24 Mines</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="play-btn start" id="playBtn" onclick="handlePlay()">
+          Start Game
+        </button>
+
+        <div style="margin-top:16px;">
+          <div class="balance-row">
+            <div class="balance-info">
+              <div class="balance-icon"><i class="fas fa-wallet"></i></div>
+              <div>
+                <div class="balance-label">Balance</div>
+                <div class="balance-amount" id="balanceDisplay">$1,000.00</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div class="balance-label">Last Win</div>
+              <div id="lastWinDisplay" style="font-size:15px;font-weight:700;color:var(--text-muted);">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div class="section-title"><i class="fas fa-clock-rotate-left"></i> Recent Results</div>
+          <div class="history-scroll" id="historyScroll"></div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div class="section-title"><i class="fas fa-robot"></i> Pattern Signal</div>
+          <div class="pattern-signal" id="patternSignal">
+            <div class="pattern-signal-header">
+              <span class="pattern-signal-title"><i class="fas fa-satellite-dish"></i> Bot Analysis</span>
+              <span class="pattern-signal-badge">AI</span>
+            </div>
+            <div class="pattern-signal-name" id="patternName">Loading...</div>
+            <div class="pattern-signal-recommendation" id="patternRecommendation">
+              <span>Analyzing patterns...</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title"><i class="fas fa-list-ul"></i> Activity Log</div>
+          <div class="activity-log" id="activityLog">
+            <div class="empty-activity">No activity yet. Start your first game!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="win-flash" id="winFlash"></div>
+    <div class="loss-flash" id="lossFlash"></div>
+
+    <nav class="bottom-nav">
+      <a href="user-dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="user-games.html" class="nav-item active">
+        <i class="fas fa-gamepad"></i>
+        <span>Games</span>
+      </a>
+      <a href="user-bot.html" class="nav-item">
+        <i class="fas fa-robot"></i>
+        <span>Bot</span>
+      </a>
+      <a href="user-history.html" class="nav-item">
+        <i class="fas fa-history"></i>
+        <span>History</span>
+      </a>
+      <a href="user-profile.html" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../shared/db.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    let currentUser = null;
+    let balance = 1000;
+    let gameState = 'idle';
+    let betAmount = 10;
+    let mineCount = 3;
+    let totalTiles = 25;
+    let revealedCount = 0;
+    let currentMultiplier = 1.00;
+    let minePositions = [];
+    let tileStates = [];
+    let resultHistory = [];
+    let activityItems = [];
+
+    const gridEl = document.getElementById('minesGrid');
+    const playBtn = document.getElementById('playBtn');
+    const resultBanner = document.getElementById('resultBanner');
+    const currentMultiplierEl = document.getElementById('currentMultiplier');
+    const potentialWinEl = document.getElementById('potentialWin');
+    const historyScroll = document.getElementById('historyScroll');
+    const activityLog = document.getElementById('activityLog');
+    const winFlash = document.getElementById('winFlash');
+    const lossFlash = document.getElementById('lossFlash');
+
+    async function init() {
+      await app.init();
+      const session = await auth.validateSession();
+      if (!session) {
+        window.location.href = '../login.html';
+        return;
+      }
+      currentUser = session.user;
+      storage.setTheme(storage.getTheme());
+      updateThemeIcon();
+      await loadBalance();
+      await loadHistory();
+      await loadPattern();
+      renderHistory();
+      renderActivityLog();
+      createGrid();
+      updateMinesInfo();
+    }
+
+    async function loadBalance() {
+      try {
+        const balances = await db.getByIndex('balances', 'userId', currentUser.userId);
+        if (balances.length > 0) {
+          const latest = balances.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+          balance = latest.amount || 1000;
+        }
+      } catch (e) {
+        balance = 1000;
+      }
+      updateBalanceDisplay();
+    }
+
+    async function saveBalance() {
+      try {
+        await db.put('balances', {
+          balanceId: app.generateId('bal'),
+          userId: currentUser.userId,
+          amount: balance,
+          date: new Date().toISOString()
+        });
+      } catch (e) {}
+    }
+
+    function updateBalanceDisplay() {
+      document.getElementById('balanceDisplay').textContent = '$' + balance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function setBet(amount) {
+      document.getElementById('betAmount').value = amount;
+    }
+
+    function updateThemeIcon() {
+      const icon = document.querySelector('#themeToggle i');
+      icon.className = storage.getTheme() === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      storage.toggleTheme();
+      updateThemeIcon();
+      app.toast('Theme updated', 'info');
+    });
+
+    document.getElementById('minesCount').addEventListener('change', (e) => {
+      mineCount = parseInt(e.target.value);
+      updateMinesInfo();
+    });
+
+    function updateMinesInfo() {
+      document.getElementById('minesCountDisplay').textContent = mineCount;
+      const gems = totalTiles - mineCount;
+      document.getElementById('gemsCountDisplay').textContent = gems;
+      const baseMult = calculateMultiplier(gems, gems);
+      document.getElementById('baseMultiplierDisplay').textContent = baseMult.toFixed(2) + 'x';
+    }
+
+    function calculateMultiplier(totalGems, gemsFound) {
+      if (gemsFound === 0) return 1.00;
+      let multiplier = 1.00;
+      for (let i = 0; i < gemsFound; i++) {
+        multiplier *= (totalTiles - mineCount - i) > 0
+          ? (totalTiles - i) / (totalTiles - mineCount - i)
+          : 1;
+      }
+      return Math.round(multiplier * 100) / 100;
+    }
+
+    function createGrid() {
+      gridEl.innerHTML = '';
+      tileStates = [];
+      for (let i = 0; i < totalTiles; i++) {
+        tileStates[i] = 'hidden';
+        const tile = document.createElement('div');
+        tile.className = 'mine-tile';
+        tile.dataset.index = i;
+        tile.innerHTML = `
+          <div class="tile-inner">
+            <div class="tile-front"><i class="fas fa-question"></i></div>
+            <div class="tile-back gem"><i class="fas fa-gem"></i></div>
+          </div>
+        `;
+        tile.addEventListener('click', () => handleTileClick(i));
+        gridEl.appendChild(tile);
+      }
+    }
+
+    function generateMines() {
+      minePositions = [];
+      while (minePositions.length < mineCount) {
+        const pos = Math.floor(Math.random() * totalTiles);
+        if (!minePositions.includes(pos)) {
+          minePositions.push(pos);
+        }
+      }
+    }
+
+    function handlePlay() {
+      if (gameState === 'playing') {
+        cashOut();
+        return;
+      }
+
+      if (gameState === 'idle' || gameState === 'ended') {
+        betAmount = parseFloat(document.getElementById('betAmount').value) || 10;
+        mineCount = parseInt(document.getElementById('minesCount').value) || 3;
+        if (betAmount < 1) betAmount = 1;
+        if (betAmount > balance) {
+          app.toast('Insufficient balance', 'error');
+          return;
+        }
+
+        balance -= betAmount;
+        saveBalance();
+        updateBalanceDisplay();
+
+        gameState = 'playing';
+        revealedCount = 0;
+        currentMultiplier = 1.00;
+        minePositions = [];
+        generateMines();
+
+        createGrid();
+        document.querySelectorAll('.mine-tile').forEach(t => t.classList.remove('disabled'));
+
+        resultBanner.style.display = 'none';
+        currentMultiplierEl.textContent = '1.00x';
+        currentMultiplierEl.className = 'multiplier-value';
+        updatePotentialWin();
+
+        playBtn.textContent = 'Cash Out';
+        playBtn.className = 'play-btn cashout';
+        playBtn.disabled = false;
+
+        addActivityResult('info', 'Game started with $' + betAmount.toFixed(2) + ' bet, ' + mineCount + ' mines');
+        app.toast('Game started! Pick a tile.', 'info');
+      }
+    }
+
+    function handleTileClick(index) {
+      if (gameState !== 'playing') return;
+      if (tileStates[index] !== 'hidden') return;
+
+      const tile = gridEl.children[index];
+      const isMine = minePositions.includes(index);
+
+      tileStates[index] = isMine ? 'mine' : 'gem';
+      tile.classList.add('flipped');
+
+      if (isMine) {
+        tile.classList.add('mine-reveal');
+        tile.querySelector('.tile-back').className = 'tile-back mine';
+        tile.querySelector('.tile-back i').className = 'fas fa-bomb';
+        triggerGameOver(index);
+      } else {
+        tile.classList.add('gem-reveal');
+        revealedCount++;
+        currentMultiplier = calculateMultiplier(totalTiles - mineCount, revealedCount);
+        currentMultiplierEl.textContent = currentMultiplier.toFixed(2) + 'x';
+        updatePotentialWin();
+
+        setTimeout(() => tile.classList.remove('gem-reveal'), 1200);
+
+        const gemsLeft = totalTiles - mineCount - revealedCount;
+        if (gemsLeft === 0) {
+          cashOut();
+        }
+      }
+    }
+
+    function updatePotentialWin() {
+      const potential = betAmount * currentMultiplier;
+      potentialWinEl.textContent = '$' + potential.toFixed(2);
+    }
+
+    function triggerGameOver(mineIndex) {
+      gameState = 'ended';
+
+      document.querySelectorAll('.mine-tile').forEach(t => t.classList.add('disabled'));
+
+      minePositions.forEach(pos => {
+        if (pos !== mineIndex) {
+          const tile = gridEl.children[pos];
+          if (tileStates[pos] === 'hidden') {
+            tileStates[pos] = 'revealed_safe';
+            tile.classList.add('flipped');
+            tile.querySelector('.tile-back').className = 'tile-back safe-gem';
+            tile.querySelector('.tile-back i').className = 'fas fa-gem';
+          }
+        }
+      });
+
+      gridEl.classList.add('shake');
+      setTimeout(() => gridEl.classList.remove('shake'), 500);
+
+      lossFlash.classList.add('active');
+      setTimeout(() => lossFlash.classList.remove('active'), 600);
+
+      currentMultiplierEl.textContent = '0.00x';
+      currentMultiplierEl.className = 'multiplier-value lose';
+
+      resultBanner.className = 'result-banner loss';
+      resultBanner.innerHTML = '<i class="fas fa-times-circle"></i> Hit a mine! Lost $' + betAmount.toFixed(2);
+      resultBanner.style.display = 'block';
+
+      document.getElementById('lastWinDisplay').textContent = '-$' + betAmount.toFixed(2);
+      document.getElementById('lastWinDisplay').style.color = '#ef4444';
+
+      playBtn.textContent = 'New Game';
+      playBtn.className = 'play-btn start';
+      playBtn.disabled = false;
+
+      resultHistory.unshift({ mines: mineCount, won: false, gems: revealedCount });
+      if (resultHistory.length > 20) resultHistory.pop();
+      renderHistory();
+
+      addActivityResult('loss', 'Hit a mine after ' + revealedCount + ' gem' + (revealedCount !== 1 ? 's' : '') + ', lost $' + betAmount.toFixed(2));
+      saveGameResult('loss', 0, -betAmount);
+      app.toast('Boom! You lost $' + betAmount.toFixed(2), 'error');
+    }
+
+    function cashOut() {
+      if (gameState !== 'playing' || revealedCount === 0) return;
+      gameState = 'ended';
+
+      const winAmount = betAmount * currentMultiplier;
+      balance += winAmount;
+      saveBalance();
+      updateBalanceDisplay();
+
+      document.querySelectorAll('.mine-tile').forEach(t => t.classList.add('disabled'));
+
+      minePositions.forEach(pos => {
+        const tile = gridEl.children[pos];
+        if (tileStates[pos] === 'hidden') {
+          tileStates[pos] = 'revealed_safe';
+          tile.classList.add('flipped');
+          tile.querySelector('.tile-back').className = 'tile-back safe-gem';
+          tile.querySelector('.tile-back i').className = 'fas fa-gem';
+        }
+      });
+
+      currentMultiplierEl.className = 'multiplier-value win';
+
+      resultBanner.className = 'result-banner win';
+      resultBanner.innerHTML = '<i class="fas fa-check-circle"></i> Cashed out at ' + currentMultiplier.toFixed(2) + 'x &mdash; Won $' + winAmount.toFixed(2);
+      resultBanner.style.display = 'block';
+
+      document.getElementById('lastWinDisplay').textContent = '+$' + winAmount.toFixed(2);
+      document.getElementById('lastWinDisplay').style.color = '#22c55e';
+
+      playBtn.textContent = 'New Game';
+      playBtn.className = 'play-btn start';
+      playBtn.disabled = false;
+
+      winFlash.classList.add('active');
+      setTimeout(() => winFlash.classList.remove('active'), 600);
+
+      spawnConfetti();
+
+      resultHistory.unshift({ mines: mineCount, won: true, gems: revealedCount, multiplier: currentMultiplier });
+      if (resultHistory.length > 20) resultHistory.pop();
+      renderHistory();
+
+      addActivityResult('win', 'Cashed out at ' + currentMultiplier.toFixed(2) + 'x for $' + winAmount.toFixed(2));
+      saveGameResult('win', currentMultiplier, winAmount);
+      app.toast('Won $' + winAmount.toFixed(2) + '!', 'success');
+    }
+
+    async function saveGameResult(type, multiplier, amount) {
+      try {
+        await db.put('results', {
+          resultId: app.generateId('res'),
+          userId: currentUser.userId,
+          gameType: 'mines',
+          type: type,
+          multiplier: multiplier,
+          amount: amount,
+          betAmount: betAmount,
+          mines: mineCount,
+          gemsFound: revealedCount,
+          date: new Date().toISOString()
+        });
+
+        await db.put('history', {
+          historyId: app.generateId('hist'),
+          userId: currentUser.userId,
+          gameType: 'mines',
+          details: type === 'win'
+            ? 'Won $' + amount.toFixed(2) + ' at ' + multiplier.toFixed(2) + 'x (' + revealedCount + ' gems)'
+            : 'Lost $' + Math.abs(amount).toFixed(2) + ' after ' + revealedCount + ' gem' + (revealedCount !== 1 ? 's' : ''),
+          multiplier: multiplier,
+          amount: amount,
+          date: new Date().toISOString()
+        });
+      } catch (e) {}
+    }
+
+    async function loadHistory() {
+      try {
+        const all = await db.getByIndex('results', 'userId', currentUser.userId);
+        const minesResults = all.filter(r => r.gameType === 'mines');
+        resultHistory = minesResults.slice(0, 15).map(r => ({
+          mines: r.mines || 3,
+          won: r.type === 'win',
+          gems: r.gemsFound || 0,
+          multiplier: r.multiplier || 0
+        }));
+      } catch (e) {
+        resultHistory = [];
+      }
+    }
+
+    function renderHistory() {
+      historyScroll.innerHTML = '';
+      if (resultHistory.length === 0) {
+        historyScroll.innerHTML = '<div style="padding:8px 16px;color:var(--text-muted);font-size:13px;">No history yet</div>';
+        return;
+      }
+      resultHistory.forEach(r => {
+        const chip = document.createElement('div');
+        chip.className = 'history-chip ' + (r.won ? 'win' : 'loss');
+        if (r.won) {
+          chip.textContent = r.gems + '💎 ' + r.multiplier.toFixed(2) + 'x';
+        } else {
+          chip.textContent = '💥 ' + r.mines + ' mines';
+        }
+        historyScroll.appendChild(chip);
+      });
+    }
+
+    function addActivityResult(type, text) {
+      activityItems.unshift({ type, text, time: new Date().toISOString() });
+      if (activityItems.length > 10) activityItems.pop();
+      renderActivityLog();
+    }
+
+    function renderActivityLog() {
+      activityLog.innerHTML = '';
+      if (activityItems.length === 0) {
+        activityLog.innerHTML = '<div class="empty-activity">No activity yet. Start your first game!</div>';
+        return;
+      }
+      activityItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'activity-item';
+        div.innerHTML = `
+          <div class="activity-dot ${item.type}"></div>
+          <div class="activity-text">${escapeHtml(item.text)}</div>
+          <div class="activity-time">${app.timeAgo(item.time)}</div>
+        `;
+        activityLog.appendChild(div);
+      });
+    }
+
+    async function loadPattern() {
+      const nameEl = document.getElementById('patternName');
+      const recEl = document.getElementById('patternRecommendation');
+      try {
+        let patterns = await db.getByIndex('patterns', 'gameType', 'mines');
+        if (patterns.length === 0) {
+          patterns = await db.getByIndex('patterns', 'category', 'Mines');
+        }
+        if (patterns.length === 0) {
+          const all = await db.getAll('patterns');
+          patterns = all.filter(p =>
+            (p.gameType && p.gameType.toLowerCase().includes('mines')) ||
+            (p.category && p.category.toLowerCase().includes('mines'))
+          );
+        }
+        if (patterns.length > 0) {
+          patterns.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+          const top = patterns[0];
+          nameEl.textContent = escapeHtml(top.name || 'Mines Pattern');
+          const score = top.matchScore || 0;
+          let recommendation = '';
+          if (score >= 70) recommendation = 'High density area detected, avoid center tiles';
+          else if (score >= 40) recommendation = 'Moderate pattern, use edge tiles';
+          else recommendation = 'Random pattern, small bets recommended';
+          recEl.innerHTML = '<span>' + escapeHtml(recommendation) + '</span> <span class="score">' + score + '% match</span>';
+        } else {
+          nameEl.textContent = 'No patterns available';
+          recEl.innerHTML = '<span>Patterns will appear once added by admin</span>';
+        }
+      } catch (e) {
+        nameEl.textContent = 'Analyzing...';
+        recEl.innerHTML = '<span>Loading pattern data...</span>';
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    function spawnConfetti() {
+      const container = document.querySelector('.game-container');
+      const existing = container.querySelector('.confetti-container');
+      if (existing) existing.remove();
+
+      const confettiContainer = document.createElement('div');
+      confettiContainer.className = 'confetti-container';
+      confettiContainer.style.position = 'absolute';
+      confettiContainer.style.inset = '0';
+      confettiContainer.style.pointerEvents = 'none';
+      confettiContainer.style.overflow = 'hidden';
+      confettiContainer.style.zIndex = '6';
+      container.style.position = 'relative';
+      container.appendChild(confettiContainer);
+
+      const colors = ['#22c55e', '#f59e0b', '#f97316', '#3b82f6', '#8b5cf6', '#ef4444'];
+      for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'confetti';
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.left = (20 + Math.random() * 60) + '%';
+        particle.style.top = '30%';
+        particle.style.width = (4 + Math.random() * 6) + 'px';
+        particle.style.height = (4 + Math.random() * 6) + 'px';
+        particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        const dx = (Math.random() - 0.5) * 350;
+        const dy = -(80 + Math.random() * 250);
+        const dur = 800 + Math.random() * 600;
+        particle.style.transition = 'all ' + dur + 'ms cubic-bezier(0.25, 0.8, 0.25, 1)';
+        confettiContainer.appendChild(particle);
+        requestAnimationFrame(() => {
+          particle.style.opacity = '1';
+          particle.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) rotate(' + (Math.random() * 720) + 'deg)';
+          setTimeout(() => {
+            particle.style.opacity = '0';
+            particle.style.transform = 'translate(' + dx + 'px, ' + (dy + 120) + 'px) rotate(' + (Math.random() * 1080) + 'deg)';
+          }, dur * 0.6);
+        });
+      }
+      setTimeout(() => { confettiContainer.remove(); }, 1500);
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Games - Stop Loss Assistant</title>
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .dash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .dash-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dash-header-left .back-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .dash-header-left .back-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
+    .dash-header-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .dash-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .header-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
+
+    .games-content {
+      padding: 8px 16px 96px;
+    }
+
+    .games-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      padding-left: 2px;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .game-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+    }
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .game-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      border-color: transparent;
+    }
+    .game-card:hover::before { opacity: 1; }
+    .game-card:active { transform: translateY(-2px) scale(1.01); }
+
+    .game-card.aviator::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .game-card.aviator:hover { box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25); border-color: rgba(239, 68, 68, 0.3); }
+    .game-card.aviator .game-icon-wrap { background: rgba(239, 68, 68, 0.1); }
+    .game-card.aviator .game-icon-wrap svg { fill: #ef4444; }
+    .game-card.aviator .game-name { color: #ef4444; }
+
+    .game-card.mines::before { background: linear-gradient(90deg, #f97316, #ea580c); }
+    .game-card.mines:hover { box-shadow: 0 8px 24px rgba(249, 115, 22, 0.25); border-color: rgba(249, 115, 22, 0.3); }
+    .game-card.mines .game-icon-wrap { background: rgba(249, 115, 22, 0.1); }
+    .game-card.mines .game-icon-wrap svg { fill: #f97316; }
+    .game-card.mines .game-name { color: #f97316; }
+
+    .game-card.limbo::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+    .game-card.limbo:hover { box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25); border-color: rgba(59, 130, 246, 0.3); }
+    .game-card.limbo .game-icon-wrap { background: rgba(59, 130, 246, 0.1); }
+    .game-card.limbo .game-icon-wrap svg { fill: #3b82f6; }
+    .game-card.limbo .game-name { color: #3b82f6; }
+
+    .game-card.wingo::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .game-card.wingo:hover { box-shadow: 0 8px 24px rgba(34, 197, 94, 0.25); border-color: rgba(34, 197, 94, 0.3); }
+    .game-card.wingo .game-icon-wrap { background: rgba(34, 197, 94, 0.1); }
+    .game-card.wingo .game-icon-wrap svg { fill: #22c55e; }
+    .game-card.wingo .game-name { color: #22c55e; }
+
+    .game-icon-wrap {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      transition: var(--transition);
+    }
+    .game-card:hover .game-icon-wrap { transform: scale(1.1); }
+    .game-icon-wrap svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .game-name {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+    .game-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 12px;
+      flex: 1;
+    }
+
+    .game-status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .play-btn {
+      width: 100%;
+      padding: 8px;
+      border-radius: var(--radius-full);
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: 0.3px;
+    }
+    .game-card.aviator .play-btn { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+    .game-card.aviator .play-btn:hover { background: #ef4444; color: #fff; }
+    .game-card.mines .play-btn { background: rgba(249, 115, 22, 0.12); color: #f97316; }
+    .game-card.mines .play-btn:hover { background: #f97316; color: #fff; }
+    .game-card.limbo .play-btn { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+    .game-card.limbo .play-btn:hover { background: #3b82f6; color: #fff; }
+    .game-card.wingo .play-btn { background: rgba(34, 197, 94, 0.12); color: #22c55e; }
+    .game-card.wingo .play-btn:hover { background: #22c55e; color: #fff; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 64px;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 600;
+      transition: var(--transition);
+      border-radius: var(--radius-sm);
+      min-width: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item i { font-size: 20px; transition: var(--transition); }
+    .nav-item:hover { color: var(--accent); }
+    .nav-item.active { color: var(--accent); }
+    .nav-item.active i { transform: scale(1.15); }
+
+    @media (min-width: 480px) {
+      .games-grid { gap: 16px; }
+      .game-icon-wrap { width: 64px; height: 64px; }
+      .game-icon-wrap svg { width: 32px; height: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="app">
+    <!-- Header -->
+    <header class="dash-header">
+      <div class="dash-header-left">
+        <button class="back-btn" onclick="window.location.href='user-dashboard.html'" title="Back">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="dash-header-title">Games</span>
+      </div>
+      <div class="dash-header-right">
+        <button class="header-btn" id="themeToggle" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="games-content">
+      <div class="games-subtitle">Choose a game to play</div>
+
+      <div class="games-grid">
+        <!-- Aviator -->
+        <a href="game-aviator.html" class="game-card aviator animate-slide-up" style="animation-delay:0.05s">
+          <span class="game-status">Active</span>
+          <div class="game-icon-wrap">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <path d="M56 8L28 32l12 4-20 20 4-16L8 56l48-48z" opacity="0.15"/>
+              <path d="M52 12c-2 0-4 1-5.5 2.5L30 31l5 2L16 52l4-18 2 5 16.5-16.5C40 19.5 42 16 44 16h8V12z" stroke-width="0"/>
+              <path d="M18 52l2.5-7.5 4 1.5L52 12a6 6 0 0 0-8.5 0L18 37.5l-4-1.5L8 52l10 0z" fill="currentColor" opacity="0.8"/>
+              <circle cx="48" cy="14" r="3" fill="currentColor" opacity="0.5"/>
+              <path d="M14 48l6-6M10 54l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+            </svg>
+          </div>
+          <div class="game-name">Aviator</div>
+          <div class="game-desc">Predict the flight multiplier</div>
+          <button class="play-btn" type="button">Play</button>
+        </a>
+
+        <!-- Mines -->
+        <a href="game-mines.html" class="game-card mines animate-slide-up" style="animation-delay:0.1s">
+          <span class="game-status">Active</span>
+          <div class="game-icon-wrap">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="14" fill="currentColor" opacity="0.15"/>
+              <circle cx="32" cy="32" r="10" fill="currentColor" opacity="0.3"/>
+              <circle cx="32" cy="32" r="5" fill="currentColor"/>
+              <line x1="32" y1="10" x2="32" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="32" y1="48" x2="32" y2="54" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="10" y1="32" x2="16" y2="32" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="48" y1="32" x2="54" y2="32" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="16.3" y1="16.3" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="43.5" y1="43.5" x2="47.7" y2="47.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="47.7" y1="16.3" x2="43.5" y2="20.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="20.5" y1="43.5" x2="16.3" y2="47.7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="game-name">Mines</div>
+          <div class="game-desc">Find gems, avoid mines</div>
+          <button class="play-btn" type="button">Play</button>
+        </a>
+
+        <!-- Limbo -->
+        <a href="game-limbo.html" class="game-card limbo animate-slide-up" style="animation-delay:0.15s">
+          <span class="game-status">Active</span>
+          <div class="game-icon-wrap">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 48L20 36l8 8 12-16 16 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.3"/>
+              <path d="M12 44l12-12 8 8 12-16 12 12" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <circle cx="12" cy="44" r="3" fill="currentColor"/>
+              <circle cx="24" cy="32" r="3" fill="currentColor"/>
+              <circle cx="32" cy="40" r="3" fill="currentColor"/>
+              <circle cx="44" cy="24" r="3" fill="currentColor"/>
+              <circle cx="56" cy="36" r="3" fill="currentColor"/>
+              <line x1="8" y1="52" x2="56" y2="52" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
+              <path d="M44 14l4 4-4 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+            </svg>
+          </div>
+          <div class="game-name">Limbo</div>
+          <div class="game-desc">Guess the multiplier</div>
+          <button class="play-btn" type="button">Play</button>
+        </a>
+
+        <!-- WinGo -->
+        <a href="game-wingo.html" class="game-card wingo animate-slide-up" style="animation-delay:0.2s">
+          <span class="game-status">Active</span>
+          <div class="game-icon-wrap">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <rect x="16" y="16" width="32" height="32" rx="6" fill="currentColor" opacity="0.15"/>
+              <circle cx="26" cy="28" r="4" fill="currentColor"/>
+              <circle cx="38" cy="28" r="4" fill="currentColor"/>
+              <circle cx="26" cy="40" r="4" fill="currentColor"/>
+              <circle cx="38" cy="40" r="4" fill="currentColor"/>
+              <rect x="20" y="18" width="6" height="6" rx="3" fill="currentColor" opacity="0.6"/>
+              <rect x="38" y="18" width="6" height="6" rx="3" fill="currentColor" opacity="0.4"/>
+              <rect x="20" y="38" width="6" height="6" rx="3" fill="currentColor" opacity="0.8"/>
+              <rect x="38" y="38" width="6" height="6" rx="3" fill="currentColor" opacity="0.3"/>
+            </svg>
+          </div>
+          <div class="game-name">WinGo</div>
+          <div class="game-desc">Color prediction game</div>
+          <button class="play-btn" type="button">Play</button>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="user-dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="user-games.html" class="nav-item active">
+        <i class="fas fa-gamepad"></i>
+        <span>Games</span>
+      </a>
+      <a href="user-bot.html" class="nav-item">
+        <i class="fas fa-robot"></i>
+        <span>Bot</span>
+      </a>
+      <a href="user-history.html" class="nav-item">
+        <i class="fas fa-history"></i>
+        <span>History</span>
+      </a>
+      <a href="user-profile.html" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../shared/db.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    async function init() {
+      await app.init();
+      const session = await auth.validateSession();
+      if (!session) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      storage.setTheme(storage.getTheme());
+      updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+      const icon = document.querySelector('#themeToggle i');
+      icon.className = storage.getTheme() === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      storage.toggleTheme();
+      updateThemeIcon();
+      app.toast('Theme updated', 'info');
+    });
+
+    document.querySelectorAll('.game-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = card.getAttribute('href');
+        if (href) window.location.href = href;
+      });
+    });
+
+    init();
+  </script>
+</body>
+</html>

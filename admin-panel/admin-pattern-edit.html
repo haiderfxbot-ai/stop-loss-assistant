@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Edit Pattern - Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-primary, #0a0e17);
+      color: var(--text-primary, #ffffff);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg-secondary, #111827);
+      border-bottom: 1px solid var(--border-color, #1f2937);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-primary, #ffffff);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary, #ffffff);
+    }
+
+    .save-btn {
+      background: var(--accent-primary, #6366f1);
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:active {
+      opacity: 0.8;
+    }
+
+    .form-container {
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary, #9ca3af);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      background: var(--bg-tertiary, #1f2937);
+      border: 1px solid var(--border-color, #374151);
+      color: var(--text-primary, #ffffff);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--accent-primary, #6366f1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    .form-select option {
+      background: var(--bg-secondary, #111827);
+      color: var(--text-primary, #ffffff);
+    }
+
+    .range-container {
+      background: var(--bg-tertiary, #1f2937);
+      border: 1px solid var(--border-color, #374151);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .range-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .range-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-primary, #6366f1);
+    }
+
+    .range-slider {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: var(--bg-primary, #0a0e17);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      background: var(--accent-primary, #6366f1);
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid var(--bg-secondary, #111827);
+    }
+
+    .range-slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      background: var(--accent-primary, #6366f1);
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid var(--bg-secondary, #111827);
+    }
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-tertiary, #1f2937);
+      border: 1px solid var(--border-color, #374151);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .toggle-label {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary, #ffffff);
+    }
+
+    .toggle-status {
+      font-size: 12px;
+      color: var(--text-secondary, #9ca3af);
+      margin-top: 2px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 28px;
+      cursor: pointer;
+    }
+
+    .toggle-switch input {
+      display: none;
+    }
+
+    .toggle-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #374151;
+      border-radius: 14px;
+      transition: background 0.3s;
+    }
+
+    .toggle-switch input:checked + .toggle-track {
+      background: var(--accent-primary, #6366f1);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      background: #ffffff;
+      border-radius: 50%;
+      transition: transform 0.3s;
+      pointer-events: none;
+    }
+
+    .toggle-switch input:checked ~ .toggle-thumb {
+      transform: translateX(22px);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+      padding-bottom: 32px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      background: var(--accent-primary, #6366f1);
+      color: #ffffff;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:active {
+      opacity: 0.8;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      background: var(--bg-tertiary, #1f2937);
+      color: var(--text-primary, #ffffff);
+      border: 1px solid var(--border-color, #374151);
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-secondary:active {
+      opacity: 0.8;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg-primary, #0a0e17);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .loading-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border-color, #374151);
+      border-top-color: var(--accent-primary, #6366f1);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-text {
+      color: var(--text-secondary, #9ca3af);
+      font-size: 14px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+      text-align: center;
+    }
+
+    .error-icon {
+      font-size: 48px;
+      color: #ef4444;
+      margin-bottom: 16px;
+    }
+
+    .error-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary, #ffffff);
+      margin-bottom: 8px;
+    }
+
+    .error-message {
+      font-size: 14px;
+      color: var(--text-secondary, #9ca3af);
+      margin-bottom: 24px;
+    }
+
+    .error-btn {
+      background: var(--accent-primary, #6366f1);
+      color: #ffffff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading pattern...</div>
+  </div>
+
+  <div class="error-container" id="errorContainer">
+    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="error-title" id="errorTitle">Pattern Not Found</div>
+    <div class="error-message" id="errorMessage">The requested pattern could not be loaded.</div>
+    <button class="error-btn" onclick="window.location.href='admin-bot.html'">Back to Bot</button>
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <header class="header">
+      <div class="header-left">
+        <button class="back-btn" onclick="window.location.href='admin-bot.html'">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="header-title">Edit Pattern</span>
+      </div>
+      <button class="save-btn" id="saveTopBtn">
+        <i class="fas fa-check"></i> Save
+      </button>
+    </header>
+
+    <div class="form-container">
+      <div class="form-group">
+        <label class="form-label">Pattern Name</label>
+        <input type="text" class="form-input" id="patternName" placeholder="Enter pattern name" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="patternCategory">
+          <option value="Mathematics">Mathematics</option>
+          <option value="Technical">Technical</option>
+          <option value="Statistical">Statistical</option>
+          <option value="Custom">Custom</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="patternDescription" placeholder="Describe what this pattern detects..." rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tags</label>
+        <input type="text" class="form-input" id="patternTags" placeholder="e.g. streak, fibonacci, trend" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Match Score</label>
+        <div class="range-container">
+          <div class="range-header">
+            <span class="form-label" style="margin:0">Confidence Level</span>
+            <span class="range-value" id="matchScoreValue">70</span>
+          </div>
+          <input type="range" class="range-slider" id="matchScore" min="0" max="100" value="70">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-container">
+          <div>
+            <div class="toggle-label">Status</div>
+            <div class="toggle-status" id="toggleStatusText">Active</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="patternStatus" checked>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Game Type</label>
+        <select class="form-select" id="patternGameType">
+          <option value="All">All Games</option>
+          <option value="Aviator">Aviator</option>
+          <option value="Mines">Mines</option>
+          <option value="Limbo">Limbo</option>
+          <option value="WinGo">Win Go</option>
+        </select>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-secondary" id="cancelBtn">Cancel</button>
+        <button class="btn-primary" id="saveBottomBtn">
+          <i class="fas fa-save"></i> Save Pattern
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Pattern updated successfully!</div>
+
+  <script src="../shared/db.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    (async function() {
+      const isAdmin = await window.AuthModule?.isAdmin();
+      if (!isAdmin) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const patternId = urlParams.get('patternId');
+
+      if (!patternId) {
+        showError('Missing Pattern ID', 'No pattern ID was provided in the URL.');
+        return;
+      }
+
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const mainContent = document.getElementById('mainContent');
+
+      let patternData = null;
+
+      try {
+        const db = await window.DBModule?.getDB();
+        if (!db) throw new Error('Database not available');
+
+        const tx = db.transaction('patterns', 'readonly');
+        const store = tx.objectStore('patterns');
+        patternData = await new Promise((resolve, reject) => {
+          const request = store.get(patternId);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      } catch (err) {
+        console.error('Failed to load pattern:', err);
+        showError('Load Error', 'Failed to load pattern data.');
+        return;
+      }
+
+      if (!patternData) {
+        showError('Pattern Not Found', 'The pattern with ID "' + patternId + '" does not exist.');
+        return;
+      }
+
+      loadingOverlay.style.display = 'none';
+      mainContent.style.display = 'block';
+
+      populateForm(patternData);
+
+      document.getElementById('matchScore').addEventListener('input', function() {
+        document.getElementById('matchScoreValue').textContent = this.value;
+      });
+
+      document.getElementById('patternStatus').addEventListener('change', function() {
+        document.getElementById('toggleStatusText').textContent = this.checked ? 'Active' : 'Inactive';
+      });
+
+      document.getElementById('saveTopBtn').addEventListener('click', savePattern);
+      document.getElementById('saveBottomBtn').addEventListener('click', savePattern);
+      document.getElementById('cancelBtn').addEventListener('click', function() {
+        window.location.href = 'admin-bot.html';
+      });
+
+      function populateForm(data) {
+        document.getElementById('patternName').value = data.name || '';
+        document.getElementById('patternCategory').value = data.category || 'Mathematics';
+        document.getElementById('patternDescription').value = data.description || '';
+        document.getElementById('patternTags').value = (data.tags || []).join(', ');
+
+        const score = data.matchScore ?? 70;
+        document.getElementById('matchScore').value = score;
+        document.getElementById('matchScoreValue').textContent = score;
+
+        const isActive = data.status === 'active' || data.status === true;
+        document.getElementById('patternStatus').checked = isActive;
+        document.getElementById('toggleStatusText').textContent = isActive ? 'Active' : 'Inactive';
+
+        document.getElementById('patternGameType').value = data.gameType || 'All';
+      }
+
+      async function savePattern() {
+        const name = document.getElementById('patternName').value.trim();
+        if (!name) {
+          showToast('Please enter a pattern name', true);
+          return;
+        }
+
+        const tagsRaw = document.getElementById('patternTags').value.trim();
+        const tags = tagsRaw ? tagsRaw.split(',').map(function(t) { return t.trim(); }).filter(Boolean) : [];
+
+        const updatedPattern = {
+          id: patternId,
+          name: name,
+          category: document.getElementById('patternCategory').value,
+          description: document.getElementById('patternDescription').value.trim(),
+          tags: tags,
+          matchScore: parseInt(document.getElementById('matchScore').value, 10),
+          status: document.getElementById('patternStatus').checked ? 'active' : 'inactive',
+          gameType: document.getElementById('patternGameType').value,
+          updatedAt: Date.now()
+        };
+
+        try {
+          const db = await window.DBModule?.getDB();
+          if (!db) throw new Error('Database not available');
+
+          const tx = db.transaction('patterns', 'readwrite');
+          const store = tx.objectStore('patterns');
+
+          await new Promise(function(resolve, reject) {
+            const request = store.put(updatedPattern);
+            request.onsuccess = function() { resolve(); };
+            request.onerror = function() { reject(request.error); };
+          });
+
+          showToast('Pattern updated successfully!');
+          setTimeout(function() {
+            window.location.href = 'admin-bot.html';
+          }, 1200);
+        } catch (err) {
+          console.error('Failed to save pattern:', err);
+          showToast('Failed to save pattern', true);
+        }
+      }
+
+      function showToast(message, isError) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.background = isError ? '#ef4444' : '#10b981';
+        toast.classList.add('show');
+        setTimeout(function() {
+          toast.classList.remove('show');
+        }, 3000);
+      }
+
+      function showError(title, message) {
+        loadingOverlay.style.display = 'none';
+        document.getElementById('errorTitle').textContent = title;
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('errorContainer').style.display = 'flex';
+      }
+    })();
+  </script>
+</body>
+</html>

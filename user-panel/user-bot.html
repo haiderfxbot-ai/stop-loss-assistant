@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Bot Patterns - Stop Loss Assistant</title>
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .bot-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .bot-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .back-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .back-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
+    .bot-header-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .bot-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .header-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
+
+    .search-container {
+      padding: 12px 16px 0;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      transition: var(--transition);
+    }
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .search-box i {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    .search-box input::placeholder {
+      color: var(--text-muted);
+    }
+    .search-clear {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      transition: var(--transition);
+    }
+    .search-clear:hover { background: var(--danger-light); color: var(--danger); }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px 4px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+    .filter-tab {
+      padding: 8px 18px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .filter-tab:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .filter-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .patterns-content {
+      padding: 8px 16px 96px;
+    }
+
+    .patterns-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pattern-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .pattern-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .pattern-card::before {
+      content: '';
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      opacity: 0.06;
+    }
+    .pattern-card.active::before { background: var(--success); }
+    .pattern-card.inactive::before { background: var(--danger); }
+
+    .pattern-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .pattern-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+    .pattern-status {
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .pattern-status.active {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    .pattern-status.inactive {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .pattern-category {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .pattern-description {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .pattern-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .match-score {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .score-bar {
+      width: 80px;
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .score-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .score-fill.high { background: var(--success); }
+    .score-fill.medium { background: var(--warning); }
+    .score-fill.low { background: var(--danger); }
+    .score-value {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .score-value.high { color: var(--success); }
+    .score-value.medium { color: var(--warning); }
+    .score-value.low { color: var(--danger); }
+
+    .pattern-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .pattern-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .view-details-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      font-family: inherit;
+    }
+    .view-details-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .view-details-btn i { font-size: 11px; }
+
+    .pattern-svg-decor {
+      position: absolute;
+      bottom: -8px;
+      right: -8px;
+      width: 40px;
+      height: 40px;
+      opacity: 0.08;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .empty-robot-svg {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 280px;
+    }
+
+    .pattern-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 0 16px 8px;
+      font-weight: 500;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 64px;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 600;
+      transition: var(--transition);
+      border-radius: var(--radius-sm);
+      min-width: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item i { font-size: 20px; transition: var(--transition); }
+    .nav-item:hover { color: var(--accent); }
+    .nav-item.active { color: var(--accent); }
+    .nav-item.active i { transform: scale(1.15); }
+
+    @media (min-width: 480px) {
+      .pattern-name { font-size: 17px; }
+      .score-bar { width: 100px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="app">
+    <header class="bot-header">
+      <div class="bot-header-left">
+        <button class="back-btn" onclick="window.location.href='user-dashboard.html'" title="Go back">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="bot-header-title">Bot Patterns</span>
+      </div>
+      <div class="bot-header-right">
+        <button class="header-btn" id="themeToggle" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="search-container">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search patterns..." autocomplete="off">
+        <button class="search-clear" id="searchClear" title="Clear search">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-tabs" id="filterTabs">
+      <button class="filter-tab active" data-filter="all">All</button>
+      <button class="filter-tab" data-filter="active">Active</button>
+      <button class="filter-tab" data-filter="popular">Popular</button>
+      <button class="filter-tab" data-filter="recent">Recent</button>
+    </div>
+
+    <div class="patterns-content">
+      <div class="pattern-count" id="patternCount"></div>
+      <div class="patterns-list" id="patternsList"></div>
+    </div>
+
+    <nav class="bottom-nav">
+      <a href="user-dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="user-games.html" class="nav-item">
+        <i class="fas fa-gamepad"></i>
+        <span>Games</span>
+      </a>
+      <a href="user-bot.html" class="nav-item active">
+        <i class="fas fa-robot"></i>
+        <span>Bot</span>
+      </a>
+      <a href="user-history.html" class="nav-item">
+        <i class="fas fa-history"></i>
+        <span>History</span>
+      </a>
+      <a href="user-profile.html" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../shared/db.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    let currentUser = null;
+    let allPatterns = [];
+    let activeFilter = 'all';
+    let searchQuery = '';
+
+    async function init() {
+      await app.init();
+      const session = await auth.validateSession();
+      if (!session) {
+        window.location.href = '../login.html';
+        return;
+      }
+      currentUser = session.user;
+      storage.setTheme(storage.getTheme());
+      updateThemeIcon();
+      await loadPatterns();
+    }
+
+    async function loadPatterns() {
+      allPatterns = await db.getAll('patterns');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      let filtered = [...allPatterns];
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(p =>
+          (p.name && p.name.toLowerCase().includes(q)) ||
+          (p.category && p.category.toLowerCase().includes(q)) ||
+          (p.description && p.description.toLowerCase().includes(q))
+        );
+      }
+
+      if (activeFilter === 'active') {
+        filtered = filtered.filter(p => p.status === 'active');
+      } else if (activeFilter === 'inactive') {
+        filtered = filtered.filter(p => p.status !== 'active');
+      } else if (activeFilter === 'popular') {
+        filtered = filtered.filter(p => p.status === 'active');
+        filtered.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+      } else if (activeFilter === 'recent') {
+        filtered.sort((a, b) => new Date(b.createdDate || 0) - new Date(a.createdDate || 0));
+      }
+
+      renderPatterns(filtered);
+    }
+
+    function renderPatterns(patterns) {
+      const list = document.getElementById('patternsList');
+      const countEl = document.getElementById('patternCount');
+
+      countEl.textContent = `${patterns.length} pattern${patterns.length !== 1 ? 's' : ''} found`;
+
+      if (patterns.length === 0) {
+        list.innerHTML = '';
+        list.appendChild(createEmptyState());
+        return;
+      }
+
+      list.innerHTML = '';
+      patterns.forEach((p, i) => {
+        const card = document.createElement('div');
+        const isActive = p.status === 'active';
+        card.className = `pattern-card ${isActive ? 'active' : 'inactive'} animate-slide-up`;
+        card.style.animationDelay = `${i * 0.05}s`;
+
+        const score = p.matchScore || 0;
+        let scoreClass = 'low';
+        if (score >= 70) scoreClass = 'high';
+        else if (score >= 40) scoreClass = 'medium';
+
+        const category = p.category || 'Uncategorized';
+        const name = escapeHtml(p.name || 'Unnamed Pattern');
+        const desc = escapeHtml(p.description || 'No description available.');
+        const date = p.createdDate ? app.formatDate(p.createdDate) : '';
+
+        card.innerHTML = `
+          <div class="pattern-card-header">
+            <div class="pattern-name">${name}</div>
+            <span class="pattern-status ${isActive ? 'active' : 'inactive'}">${isActive ? 'Active' : 'Inactive'}</span>
+          </div>
+          <span class="pattern-category">${escapeHtml(category)}</span>
+          <div class="pattern-description">${desc}</div>
+          <div class="pattern-meta">
+            <div class="match-score">
+              <div class="score-bar">
+                <div class="score-fill ${scoreClass}" style="width:${score}%"></div>
+              </div>
+              <span class="score-value ${scoreClass}">${score}%</span>
+            </div>
+          </div>
+          <div class="pattern-card-footer">
+            <span class="pattern-date">${date ? '<i class="fas fa-clock" style="margin-right:4px;font-size:10px"></i>' + date : ''}</span>
+            <a href="user-pattern-viewer.html?patternId=${encodeURIComponent(p.patternId)}" class="view-details-btn">
+              View Details <i class="fas fa-chevron-right"></i>
+            </a>
+          </div>
+          <svg class="pattern-svg-decor" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 4L6 10v8c0 7.5 5.4 14.5 14 16 8.6-1.5 14-8.5 14-16v-8L20 4z" fill="currentColor"/>
+          </svg>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function createEmptyState() {
+      const div = document.createElement('div');
+      div.className = 'empty-state';
+      div.innerHTML = `
+        <svg class="empty-robot-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <rect x="24" y="32" width="72" height="64" rx="16" fill="currentColor" opacity="0.12"/>
+          <rect x="28" y="36" width="64" height="56" rx="12" stroke="currentColor" stroke-width="3" fill="none" opacity="0.3"/>
+          <circle cx="44" cy="60" r="6" fill="currentColor" opacity="0.4"/>
+          <circle cx="76" cy="60" r="6" fill="currentColor" opacity="0.4"/>
+          <path d="M44 76c0-6.6 7.2-12 16-12s16 5.4 16 12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.3"/>
+          <rect x="52" y="16" width="16" height="20" rx="4" fill="currentColor" opacity="0.18"/>
+          <circle cx="60" cy="12" r="6" fill="currentColor" opacity="0.25"/>
+          <line x1="12" y1="56" x2="28" y2="56" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+          <line x1="92" y1="56" x2="108" y2="56" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+          <line x1="60" y1="92" x2="60" y2="108" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+          <line x1="44" y1="92" x2="44" y2="104" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+          <line x1="76" y1="92" x2="76" y2="104" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+        </svg>
+        <h3>No patterns available yet</h3>
+        <p>Patterns will appear here once added by administrator.</p>
+      `;
+      return div;
+    }
+
+    function updateThemeIcon() {
+      const icon = document.querySelector('#themeToggle i');
+      icon.className = storage.getTheme() === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+      searchQuery = this.value.trim();
+      const clearBtn = document.getElementById('searchClear');
+      clearBtn.style.display = searchQuery ? 'flex' : 'none';
+      applyFilters();
+    });
+
+    document.getElementById('searchClear').addEventListener('click', function () {
+      document.getElementById('searchInput').value = '';
+      searchQuery = '';
+      this.style.display = 'none';
+      applyFilters();
+    });
+
+    document.getElementById('filterTabs').addEventListener('click', function (e) {
+      const tab = e.target.closest('.filter-tab');
+      if (!tab) return;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeFilter = tab.dataset.filter;
+      applyFilters();
+    });
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      storage.toggleTheme();
+      updateThemeIcon();
+      app.toast('Theme updated', 'info');
+    });
+
+    init();
+  </script>
+</body>
+</html>

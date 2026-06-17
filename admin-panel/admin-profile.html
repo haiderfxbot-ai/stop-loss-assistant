@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Profile</title>
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 12px;
+        }
+
+        .header .title {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            border: 3px solid var(--accent-color);
+        }
+
+        .avatar svg {
+            width: 64px;
+            height: 64px;
+            fill: var(--accent-color);
+        }
+
+        .admin-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .role-badge {
+            background: var(--accent-color);
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .scroll-content {
+            padding: 16px;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        .section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent-color);
+        }
+
+        .form-group input[readonly] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .strength-meter {
+            height: 4px;
+            border-radius: 2px;
+            background: var(--bg-tertiary);
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .strength-meter .bar {
+            height: 100%;
+            width: 0;
+            border-radius: 2px;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        .strength-text {
+            font-size: 11px;
+            margin-top: 4px;
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #fff;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-color);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 100;
+        }
+
+        .bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 10px;
+            gap: 3px;
+            padding: 4px 10px;
+        }
+
+        .bottom-nav a i {
+            font-size: 18px;
+        }
+
+        .bottom-nav a.active {
+            color: var(--accent-color);
+        }
+
+        .bottom-nav a.active i {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="history.back()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="title">Admin Profile</span>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+    </div>
+
+    <div class="profile-header">
+        <div class="avatar">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="25" y="30" width="50" height="40" rx="8" fill="currentColor" opacity="0.9"/>
+                <circle cx="38" cy="50" r="5" fill="var(--bg-secondary)"/>
+                <circle cx="62" cy="50" r="5" fill="var(--bg-secondary)"/>
+                <rect x="35" y="60" width="30" height="4" rx="2" fill="var(--bg-secondary)"/>
+                <rect x="40" y="18" width="20" height="14" rx="4" fill="currentColor" opacity="0.7"/>
+                <circle cx="50" cy="22" r="3" fill="var(--bg-secondary)"/>
+                <rect x="20" y="70" width="12" height="16" rx="4" fill="currentColor" opacity="0.8"/>
+                <rect x="68" y="70" width="12" height="16" rx="4" fill="currentColor" opacity="0.8"/>
+            </svg>
+        </div>
+        <div class="admin-name" id="displayName">Admin</div>
+        <div class="role-badge">Administrator</div>
+    </div>
+
+    <div class="scroll-content">
+        <div class="section">
+            <div class="section-title"><i class="fas fa-user-pen"></i> Profile Info</div>
+            <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" id="inputDisplayName" placeholder="Enter display name">
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="inputUsername" readonly>
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <input type="text" id="inputRole" readonly>
+            </div>
+            <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Profile</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><i class="fas fa-lock"></i> Change Password</div>
+            <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Enter current password">
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" oninput="checkStrength()">
+            </div>
+            <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+            </div>
+            <div class="strength-meter"><div class="bar" id="strengthBar"></div></div>
+            <div class="strength-text" id="strengthText"></div>
+            <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><i class="fas fa-shield-halved"></i> Security</div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;">
+                Changing your admin panel password will update your credentials in IndexedDB. Make sure to remember it.
+            </p>
+            <div class="form-group">
+                <label>Verify Current Password</label>
+                <input type="password" id="securityCurrentPwd" placeholder="Enter current password">
+            </div>
+            <div class="form-group">
+                <label>New Admin Password</label>
+                <input type="password" id="securityNewPwd" placeholder="Enter new admin password">
+            </div>
+            <div class="form-group">
+                <label>Confirm New Admin Password</label>
+                <input type="password" id="securityConfirmPwd" placeholder="Confirm new admin password">
+            </div>
+            <button class="btn btn-primary" onclick="changeAdminPassword()">Change Admin Password</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><i class="fas fa-headset"></i> Support &amp; About</div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="supportPhone" placeholder="+1 234 567 890">
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="supportEmail" placeholder="admin@example.com">
+            </div>
+            <div class="form-group">
+                <label>WhatsApp</label>
+                <input type="tel" id="supportWhatsapp" placeholder="+1 234 567 890">
+            </div>
+            <div class="form-group">
+                <label>About Text</label>
+                <textarea id="supportAbout" placeholder="Tell users about support or your app..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveSupport()">Save Support Info</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><i class="fas fa-gear"></i> App Settings</div>
+            <div class="stat-row">
+                <span class="stat-label">Version</span>
+                <span class="stat-value">1.0.0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Storage Used</span>
+                <span class="stat-value" id="storageUsed">Calculating...</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Theme</span>
+                <span class="stat-value" id="currentTheme">Light</span>
+            </div>
+        </div>
+
+        <button class="btn btn-danger" onclick="logout()">
+            <i class="fas fa-right-from-bracket"></i> Logout
+        </button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <nav class="bottom-nav">
+        <a href="admin-dashboard.html"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="admin-games.html"><i class="fas fa-gamepad"></i><span>Games</span></a>
+        <a href="admin-bot.html"><i class="fas fa-robot"></i><span>Bot</span></a>
+        <a href="admin-history.html"><i class="fas fa-clock-rotate-left"></i><span>History</span></a>
+        <a href="admin-profile.html" class="active"><i class="fas fa-user-shield"></i><span>Profile</span></a>
+    </nav>
+
+    <script src="../shared/db.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/app.js"></script>
+    <script>
+        let currentUser = null;
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            document.getElementById('themeIcon').className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('theme', next);
+            updateThemeDisplay(next);
+        }
+
+        function updateThemeDisplay(theme) {
+            document.getElementById('currentTheme').textContent = theme === 'dark' ? 'Dark' : 'Light';
+        }
+
+        function checkStrength() {
+            const pwd = document.getElementById('newPassword').value;
+            const bar = document.getElementById('strengthBar');
+            const text = document.getElementById('strengthText');
+            let score = 0;
+            if (pwd.length >= 6) score++;
+            if (pwd.length >= 10) score++;
+            if (/[A-Z]/.test(pwd)) score++;
+            if (/[0-9]/.test(pwd)) score++;
+            if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+            const levels = [
+                { width: '0%', color: 'transparent', label: '' },
+                { width: '20%', color: '#e74c3c', label: 'Very Weak' },
+                { width: '40%', color: '#e67e22', label: 'Weak' },
+                { width: '60%', color: '#f1c40f', label: 'Fair' },
+                { width: '80%', color: '#2ecc71', label: 'Strong' },
+                { width: '100%', color: '#27ae60', label: 'Very Strong' }
+            ];
+            const lvl = levels[score] || levels[0];
+            bar.style.width = lvl.width;
+            bar.style.background = lvl.color;
+            text.textContent = pwd.length ? lvl.label : '';
+            text.style.color = lvl.color;
+        }
+
+        async function validateSession() {
+            if (typeof validateAdminSession === 'function') {
+                const valid = await validateAdminSession();
+                if (!valid) {
+                    window.location.href = '../login.html';
+                    return false;
+                }
+                return true;
+            }
+            const session = JSON.parse(localStorage.getItem('adminSession') || 'null');
+            if (!session || !session.isLoggedIn) {
+                window.location.href = '../login.html';
+                return false;
+            }
+            return true;
+        }
+
+        async function loadProfile() {
+            currentUser = JSON.parse(localStorage.getItem('adminSession') || 'null');
+            if (!currentUser) return;
+
+            document.getElementById('displayName').textContent = currentUser.displayName || currentUser.username || 'Admin';
+            document.getElementById('inputDisplayName').value = currentUser.displayName || '';
+            document.getElementById('inputUsername').value = currentUser.username || '';
+            document.getElementById('inputRole').value = currentUser.role || 'admin';
+        }
+
+        async function saveProfile() {
+            const newName = document.getElementById('inputDisplayName').value.trim();
+            if (!newName) {
+                showToast('Display name cannot be empty');
+                return;
+            }
+
+            currentUser.displayName = newName;
+            localStorage.setItem('adminSession', JSON.stringify(currentUser));
+
+            if (typeof openDB === 'function') {
+                try {
+                    const db = await openDB();
+                    const tx = db.transaction('users', 'readwrite');
+                    const store = tx.objectStore('users');
+                    const req = store.get(currentUser.id);
+                    req.onsuccess = function () {
+                        const user = req.result;
+                        if (user) {
+                            user.displayName = newName;
+                            store.put(user);
+                        }
+                    };
+                } catch (e) {
+                    console.warn('IndexedDB update skipped:', e);
+                }
+            }
+
+            document.getElementById('displayName').textContent = newName;
+            showToast('Profile updated');
+        }
+
+        async function changePassword() {
+            const current = document.getElementById('currentPassword').value;
+            const newPwd = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+
+            if (!current || !newPwd || !confirm) {
+                showToast('Fill in all password fields');
+                return;
+            }
+            if (newPwd !== confirm) {
+                showToast('New passwords do not match');
+                return;
+            }
+            if (newPwd.length < 6) {
+                showToast('Password must be at least 6 characters');
+                return;
+            }
+
+            if (typeof verifyPassword === 'function') {
+                const valid = await verifyPassword(currentUser.username, current);
+                if (!valid) {
+                    showToast('Current password is incorrect');
+                    return;
+                }
+            } else if (currentUser.password && currentUser.password !== current) {
+                showToast('Current password is incorrect');
+                return;
+            }
+
+            await updateUserPassword(currentUser.id || currentUser.username, newPwd);
+
+            currentUser.password = newPwd;
+            localStorage.setItem('adminSession', JSON.stringify(currentUser));
+
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('strengthBar').style.width = '0%';
+            document.getElementById('strengthText').textContent = '';
+
+            showToast('Password updated successfully');
+        }
+
+        async function changeAdminPassword() {
+            const current = document.getElementById('securityCurrentPwd').value;
+            const newPwd = document.getElementById('securityNewPwd').value;
+            const confirm = document.getElementById('securityConfirmPwd').value;
+
+            if (!current || !newPwd || !confirm) {
+                showToast('Fill in all fields');
+                return;
+            }
+            if (newPwd !== confirm) {
+                showToast('New passwords do not match');
+                return;
+            }
+            if (newPwd.length < 6) {
+                showToast('Password must be at least 6 characters');
+                return;
+            }
+
+            if (typeof verifyPassword === 'function') {
+                const valid = await verifyPassword(currentUser.username, current);
+                if (!valid) {
+                    showToast('Current password is incorrect');
+                    return;
+                }
+            } else if (currentUser.password && currentUser.password !== current) {
+                showToast('Current password is incorrect');
+                return;
+            }
+
+            await updateUserPassword(currentUser.id || currentUser.username, newPwd);
+
+            currentUser.password = newPwd;
+            localStorage.setItem('adminSession', JSON.stringify(currentUser));
+
+            document.getElementById('securityCurrentPwd').value = '';
+            document.getElementById('securityNewPwd').value = '';
+            document.getElementById('securityConfirmPwd').value = '';
+
+            showToast('Admin password changed successfully');
+        }
+
+        async function updateUserPassword(userId, newPwd) {
+            if (typeof openDB === 'function') {
+                try {
+                    const db = await openDB();
+                    const tx = db.transaction('users', 'readwrite');
+                    const store = tx.objectStore('users');
+                    const req = store.get(userId);
+                    req.onsuccess = function () {
+                        const user = req.result;
+                        if (user) {
+                            user.password = newPwd;
+                            store.put(user);
+                        }
+                    };
+                } catch (e) {
+                    console.warn('IndexedDB password update skipped:', e);
+                }
+            }
+        }
+
+        function saveSupport() {
+            const data = {
+                phone: document.getElementById('supportPhone').value.trim(),
+                email: document.getElementById('supportEmail').value.trim(),
+                whatsapp: document.getElementById('supportWhatsapp').value.trim(),
+                about: document.getElementById('supportAbout').value.trim()
+            };
+            localStorage.setItem('adminSupport', JSON.stringify(data));
+            showToast('Support info saved');
+        }
+
+        function loadSupport() {
+            const data = JSON.parse(localStorage.getItem('adminSupport') || 'null');
+            if (data) {
+                document.getElementById('supportPhone').value = data.phone || '';
+                document.getElementById('supportEmail').value = data.email || '';
+                document.getElementById('supportWhatsapp').value = data.whatsapp || '';
+                document.getElementById('supportAbout').value = data.about || '';
+            }
+        }
+
+        function calculateStorage() {
+            try {
+                let total = 0;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    total += localStorage.getItem(key).length * 2;
+                }
+                const kb = (total / 1024).toFixed(1);
+                const mb = (total / (1024 * 1024)).toFixed(2);
+                document.getElementById('storageUsed').textContent = total > 1048576 ? mb + ' MB' : kb + ' KB';
+            } catch (e) {
+                document.getElementById('storageUsed').textContent = 'N/A';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminSession');
+            if (typeof clearSession === 'function') clearSession();
+            window.location.href = '../login.html';
+        }
+
+        function loadTheme() {
+            const saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            document.getElementById('themeIcon').className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            updateThemeDisplay(saved);
+        }
+
+        (async function init() {
+            loadTheme();
+            const ok = await validateSession();
+            if (!ok) return;
+            await loadProfile();
+            loadSupport();
+            calculateStorage();
+        })();
+    </script>
+</body>
+</html>

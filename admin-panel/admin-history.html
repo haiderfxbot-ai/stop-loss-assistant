@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History - Admin Panel</title>
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary, #0a0e1a);
+      color: var(--text-primary, #ffffff);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--bg-secondary, #111827);
+      border-bottom: 1px solid var(--border-color, #1e293b);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top-bar .left { display: flex; align-items: center; gap: 12px; }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-primary, #fff);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .top-bar h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: var(--text-primary, #fff);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 16px 16px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .filter-tabs::-webkit-scrollbar { display: none; }
+
+    .filter-tab {
+      padding: 8px 16px;
+      background: var(--bg-secondary, #111827);
+      border: 1px solid var(--border-color, #1e293b);
+      border-radius: 20px;
+      color: var(--text-secondary, #9ca3af);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .filter-tab:hover {
+      background: var(--bg-tertiary, #1f2937);
+      color: var(--text-primary, #fff);
+    }
+
+    .filter-tab.active {
+      background: var(--accent-color, #6366f1);
+      border-color: var(--accent-color, #6366f1);
+      color: #fff;
+    }
+
+    .history-list {
+      padding: 0 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-item {
+      background: var(--bg-secondary, #111827);
+      border: 1px solid var(--border-color, #1e293b);
+      border-radius: 14px;
+      padding: 16px;
+      transition: transform 0.15s;
+    }
+
+    .history-item:active { transform: scale(0.98); }
+
+    .history-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .history-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .history-icon.login { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .history-icon.action { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .history-icon.system { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .history-icon.error { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .history-icon.user { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+
+    .history-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-action {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-desc {
+      font-size: 13px;
+      color: var(--text-secondary, #9ca3af);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.4;
+    }
+
+    .history-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-color, #1e293b);
+    }
+
+    .history-timestamp {
+      font-size: 12px;
+      color: var(--text-tertiary, #6b7280);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .history-user {
+      font-size: 12px;
+      color: var(--text-secondary, #9ca3af);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .view-btn {
+      padding: 6px 14px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #6366f1;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .view-btn:hover { background: rgba(99, 102, 241, 0.25); }
+
+    .type-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+    }
+
+    .type-badge.login { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .type-badge.action { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .type-badge.system { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .type-badge.error { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .type-badge.user { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary, #9ca3af);
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+    }
+
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border-color, #1e293b);
+      border-top-color: var(--accent-color, #6366f1);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary, #111827);
+      border-top: 1px solid var(--border-color, #1e293b);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      text-decoration: none;
+      color: var(--text-secondary, #9ca3af);
+      font-size: 10px;
+      padding: 4px 12px;
+      transition: color 0.15s;
+    }
+
+    .nav-item.active { color: var(--accent-color, #6366f1); }
+    .nav-item i { font-size: 20px; }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="left">
+      <button class="back-btn" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1>History</h1>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button class="filter-tab active" onclick="setTab('all', this)">All</button>
+    <button class="filter-tab" onclick="setTab('login', this)">Logins</button>
+    <button class="filter-tab" onclick="setTab('action', this)">Actions</button>
+    <button class="filter-tab" onclick="setTab('system', this)">System</button>
+  </div>
+
+  <!-- History List -->
+  <div class="history-list" id="historyList">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="admin-dashboard.html" class="nav-item">
+      <i class="fas fa-home"></i>
+      <span>Home</span>
+    </a>
+    <a href="admin-games.html" class="nav-item">
+      <i class="fas fa-gamepad"></i>
+      <span>Games</span>
+    </a>
+    <a href="admin-bot.html" class="nav-item">
+      <i class="fas fa-robot"></i>
+      <span>Bot</span>
+    </a>
+    <a href="admin-history.html" class="nav-item active">
+      <i class="fas fa-clock-rotate-left"></i>
+      <span>History</span>
+    </a>
+    <a href="admin-profile.html" class="nav-item">
+      <i class="fas fa-user"></i>
+      <span>Profile</span>
+    </a>
+  </div>
+
+  <script src="../shared/db.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    let allEntries = [];
+    let currentTab = 'all';
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+      const icon = document.querySelector('.theme-toggle i');
+      if (document.body.classList.contains('light-theme')) {
+        icon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+      }
+    }
+
+    async function checkAdmin() {
+      try {
+        if (typeof auth !== 'undefined' && auth.validateSession) {
+          const session = auth.validateSession();
+          if (!session || session.role !== 'admin') {
+            window.location.href = '../login.html';
+            return;
+          }
+        } else if (typeof requireAuth === 'function') {
+          const user = await requireAuth();
+          if (user && user.role !== 'admin') {
+            window.location.href = '../login.html';
+            return;
+          }
+        } else if (typeof getCurrentUser === 'function') {
+          const user = await getCurrentUser();
+          if (!user || user.role !== 'admin') {
+            window.location.href = '../login.html';
+            return;
+          }
+        } else {
+          const stored = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+          if (!stored) {
+            window.location.href = '../login.html';
+            return;
+          }
+          const user = JSON.parse(stored);
+          if (user.role !== 'admin') {
+            window.location.href = '../login.html';
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location.href = '../login.html';
+        return;
+      }
+      loadHistory();
+    }
+
+    async function loadHistory() {
+      const container = document.getElementById('historyList');
+      container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+      try {
+        let auditLogs = [];
+        let loginHistory = [];
+
+        if (typeof db !== 'undefined' && db.auditLogs) {
+          auditLogs = await db.auditLogs.toArray ? await db.auditLogs.toArray() : await db.auditLogs.all();
+        } else if (typeof openDB === 'function') {
+          const idb = await openDB();
+          if (idb.objectStoreNames.contains('auditLogs')) {
+            const tx = idb.transaction('auditLogs', 'readonly');
+            const store = tx.objectStore('auditLogs');
+            auditLogs = await new Promise((resolve, reject) => {
+              const req = store.getAll();
+              req.onsuccess = () => resolve(req.result || []);
+              req.onerror = () => reject(req.error);
+            });
+          }
+          if (idb.objectStoreNames.contains('loginHistory')) {
+            const tx2 = idb.transaction('loginHistory', 'readonly');
+            const store2 = tx2.objectStore('loginHistory');
+            loginHistory = await new Promise((resolve, reject) => {
+              const req = store2.getAll();
+              req.onsuccess = () => resolve(req.result || []);
+              req.onerror = () => reject(req.error);
+            });
+          }
+        } else if (typeof window.db !== 'undefined' && window.db.objectStoreNames) {
+          if (window.db.objectStoreNames.contains('auditLogs')) {
+            const tx = window.db.transaction('auditLogs', 'readonly');
+            const store = tx.objectStore('auditLogs');
+            auditLogs = await new Promise((resolve, reject) => {
+              const req = store.getAll();
+              req.onsuccess = () => resolve(req.result || []);
+              req.onerror = () => reject(req.error);
+            });
+          }
+          if (window.db.objectStoreNames.contains('loginHistory')) {
+            const tx2 = window.db.transaction('loginHistory', 'readonly');
+            const store2 = tx2.objectStore('loginHistory');
+            loginHistory = await new Promise((resolve, reject) => {
+              const req = store2.getAll();
+              req.onsuccess = () => resolve(req.result || []);
+              req.onerror = () => reject(req.error);
+            });
+          }
+        }
+
+        allEntries = [];
+
+        loginHistory.forEach(function(entry) {
+          allEntries.push({
+            id: entry.id || ('login_' + (entry.timestamp || '')),
+            type: 'login',
+            timestamp: entry.timestamp || entry.loginTime || entry.date || '',
+            user: entry.user || entry.username || entry.email || 'Unknown',
+            action: entry.action || entry.event || 'Login',
+            description: entry.description || entry.message || entry.ip || '',
+            ip: entry.ip || ''
+          });
+        });
+
+        auditLogs.forEach(function(entry) {
+          var type = 'action';
+          if (entry.category) type = entry.category;
+          else if (entry.type) type = entry.type;
+          else if (entry.level) {
+            if (entry.level === 'error' || entry.level === 'warning') type = 'system';
+            else type = 'action';
+          }
+
+          allEntries.push({
+            id: entry.id || entry.logId || ('audit_' + (entry.timestamp || '')),
+            type: type,
+            timestamp: entry.timestamp || entry.date || entry.createdAt || '',
+            user: entry.user || entry.username || entry.admin || entry.performedBy || '',
+            action: entry.action || entry.event || entry.name || 'Action',
+            description: entry.description || entry.message || entry.details || '',
+            data: entry.data || entry.metadata || null
+          });
+        });
+
+        allEntries.sort(function(a, b) {
+          return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+
+        renderEntries();
+      } catch (err) {
+        console.error('Load history error:', err);
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load history</p></div>';
+      }
+    }
+
+    function renderEntries() {
+      var container = document.getElementById('historyList');
+      var filtered = allEntries;
+
+      if (currentTab !== 'all') {
+        filtered = allEntries.filter(function(e) { return e.type === currentTab; });
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-clock-rotate-left"></i><p>No history entries found</p></div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(function(entry) {
+        var iconClass = entry.type;
+        var icon;
+        switch (entry.type) {
+          case 'login': icon = 'fas fa-right-to-bracket'; break;
+          case 'action': icon = 'fas fa-bolt'; break;
+          case 'system': icon = 'fas fa-gear'; break;
+          case 'error': icon = 'fas fa-triangle-exclamation'; break;
+          case 'user': icon = 'fas fa-user'; break;
+          default: icon = 'fas fa-circle';
+        }
+
+        var timeStr = '';
+        if (entry.timestamp) {
+          var d = new Date(entry.timestamp);
+          var now = new Date();
+          var diffMs = now - d;
+          var diffMin = Math.floor(diffMs / 60000);
+          if (diffMin < 1) timeStr = 'Just now';
+          else if (diffMin < 60) timeStr = diffMin + 'm ago';
+          else if (diffMin < 1440) timeStr = Math.floor(diffMin / 60) + 'h ago';
+          else if (diffMin < 10080) timeStr = Math.floor(diffMin / 1440) + 'd ago';
+          else timeStr = d.toLocaleDateString();
+        }
+
+        var dateStr = '';
+        if (entry.timestamp) {
+          var d2 = new Date(entry.timestamp);
+          dateStr = d2.toLocaleDateString() + ' ' + d2.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        }
+
+        var userHtml = entry.user
+          ? '<span class="history-user"><i class="fas fa-user-circle"></i> ' + escapeHtml(entry.user) + '</span>'
+          : '';
+
+        var badgeType = entry.type;
+        if (badgeType === 'error') badgeType = 'error';
+
+        return '<div class="history-item">' +
+          '<div class="history-top">' +
+            '<div class="history-left">' +
+              '<div class="history-icon ' + iconClass + '"><i class="' + icon + '"></i></div>' +
+              '<div class="history-info">' +
+                '<div class="history-action">' + escapeHtml(entry.action) + '</div>' +
+                '<div class="history-desc">' + escapeHtml(entry.description || 'No description') + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<span class="type-badge ' + badgeType + '">' + escapeHtml(entry.type) + '</span>' +
+          '</div>' +
+          '<div class="history-meta">' +
+            '<div>' +
+              '<span class="history-timestamp"><i class="fas fa-clock"></i> ' + timeStr + (dateStr ? ' &middot; ' + dateStr : '') + '</span>' +
+              '<br>' + userHtml +
+            '</div>' +
+            '<a href="admin-history-viewer.html?logId=' + encodeURIComponent(entry.id) + '" class="view-btn">View</a>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function setTab(tab, element) {
+      currentTab = tab;
+      document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+      element.classList.add('active');
+      renderEntries();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    document.addEventListener('DOMContentLoaded', checkAdmin);
+  </script>
+</body>
+</html>

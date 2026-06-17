@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Stop Loss Assistant</title>
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-bottom: 70px;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 15px;
+        }
+
+        .header .title {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* Scrollable Content */
+        .content {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Profile Avatar Section */
+        .avatar-section {
+            text-align: center;
+            padding: 30px 20px;
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .avatar-container {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .avatar-container svg {
+            width: 60px;
+            height: 60px;
+            fill: white;
+        }
+
+        .display-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .role-badge.admin {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .role-badge.user {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-header i {
+            font-size: 18px;
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input:disabled,
+        .form-group input[readonly] {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .form-group input[type="password"] {
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            margin-top: 10px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background 0.3s;
+            border-radius: 2px;
+        }
+
+        .strength-fill.weak {
+            width: 25%;
+            background: #ff4757;
+        }
+
+        .strength-fill.fair {
+            width: 50%;
+            background: #ffa502;
+        }
+
+        .strength-fill.good {
+            width: 75%;
+            background: #2ed573;
+        }
+
+        .strength-fill.strong {
+            width: 100%;
+            background: linear-gradient(135deg, #2ed573 0%, #1e90ff 100%);
+        }
+
+        .strength-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Toggle Switch */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .toggle-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .toggle-info {
+            flex: 1;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .toggle-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border-color);
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Auto-logout Select */
+        .auto-logout-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* About Card */
+        .about-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .about-item:last-child {
+            border-bottom: none;
+        }
+
+        .about-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .about-value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .system-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Save Button */
+        .btn-save {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-save:active {
+            transform: translateY(0);
+        }
+
+        /* Logout Button */
+        .btn-logout {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn-logout:active {
+            transform: translateY(0);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid #2ed573;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ff4757;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 10px;
+            padding: 5px 10px;
+            transition: color 0.3s;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+        .nav-item:hover {
+            color: var(--accent-color);
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .card {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <button class="back-btn" onclick="history.back()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="title">Profile</span>
+        <button class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </button>
+    </header>
+
+    <!-- Scrollable Content -->
+    <main class="content">
+        <!-- Profile Avatar Section -->
+        <div class="avatar-section">
+            <div class="avatar-container">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                    <circle cx="12" cy="9" r="2.5" fill="white"/>
+                    <path d="M9 14h6v2H9zm1 3h4v1h-4z"/>
+                </svg>
+            </div>
+            <div class="display-name" id="displayName">Loading...</div>
+            <span class="role-badge" id="roleBadge">Loading...</span>
+        </div>
+
+        <!-- Profile Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user"></i>
+                <h3>Profile Information</h3>
+            </div>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="editDisplayName">Display Name</label>
+                    <input type="text" id="editDisplayName" placeholder="Enter your display name">
+                </div>
+                <div class="form-group">
+                    <label for="editUsername">Username</label>
+                    <input type="text" id="editUsername" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <input type="text" id="editRole" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label for="memberSince">Member Since</label>
+                    <input type="text" id="memberSince" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label for="lastLogin">Last Login</label>
+                    <input type="text" id="lastLogin" readonly disabled>
+                </div>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Save Profile
+                </button>
+            </form>
+        </div>
+
+        <!-- Change Password Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-lock"></i>
+                <h3>Change Password</h3>
+            </div>
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                </div>
+                <div class="password-strength" id="passwordStrength" style="display: none;">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <span class="strength-text" id="strengthText"></span>
+                </div>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-key"></i> Update Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Preferences Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-cog"></i>
+                <h3>Preferences</h3>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-label">Theme</div>
+                    <div class="toggle-desc">Switch between dark and light mode</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <div class="toggle-label">Notifications</div>
+                    <div class="toggle-desc">Enable push notifications</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notificationSwitch">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="toggle-row" style="flex-direction: column; align-items: flex-start;">
+                <div class="toggle-info" style="width: 100%;">
+                    <div class="toggle-label">Auto-logout</div>
+                    <div class="toggle-desc">Automatically logout after inactivity</div>
+                </div>
+                <select class="auto-logout-select" id="autoLogoutSelect">
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="0">Disabled</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Support Section Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-headset"></i>
+                <h3>Support Information</h3>
+            </div>
+            <form id="supportForm">
+                <div class="form-group">
+                    <label for="contactNumber">Contact Number</label>
+                    <input type="text" id="contactNumber" placeholder="Enter support contact number">
+                </div>
+                <div class="form-group">
+                    <label for="whatsappGroup">WhatsApp Group Link</label>
+                    <input type="url" id="whatsappGroup" placeholder="https://chat.whatsapp.com/...">
+                </div>
+                <div class="form-group">
+                    <label for="whatsappNumber">WhatsApp Number</label>
+                    <input type="text" id="whatsappNumber" placeholder="Enter WhatsApp number">
+                </div>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Save Support Info
+                </button>
+            </form>
+        </div>
+
+        <!-- About Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i>
+                <h3>About</h3>
+            </div>
+            <div class="about-item">
+                <span class="about-label">App Version</span>
+                <span class="about-value">1.0.0</span>
+            </div>
+            <div class="about-item">
+                <span class="about-label">Developer</span>
+                <span class="about-value">Stop Loss Assistant Team</span>
+            </div>
+            <div class="system-desc">
+                Stop Loss Assistant is a comprehensive trading management system designed to help traders manage their positions, track performance, and make informed decisions. The system includes features for bot management, game tracking, and detailed analytics.
+            </div>
+        </div>
+
+        <!-- Logout Button -->
+        <button class="btn-logout" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="user-dashboard.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="user-games.html" class="nav-item">
+            <i class="fas fa-gamepad"></i>
+            <span>Games</span>
+        </a>
+        <a href="user-bot.html" class="nav-item">
+            <i class="fas fa-robot"></i>
+            <span>Bot</span>
+        </a>
+        <a href="user-history.html" class="nav-item">
+            <i class="fas fa-history"></i>
+            <span>History</span>
+        </a>
+        <a href="user-profile.html" class="nav-item active">
+            <i class="fas fa-user-circle"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script src="../shared/db.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/app.js"></script>
+    <script>
+        // Session validation
+        (function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = '../login.html';
+                return;
+            }
+        })();
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const toast = document.getElementById('toast');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeSwitch = document.getElementById('themeSwitch');
+        const notificationSwitch = document.getElementById('notificationSwitch');
+        const autoLogoutSelect = document.getElementById('autoLogoutSelect');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Get current user
+        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserProfile();
+            loadPreferences();
+            loadSupportInfo();
+            hideLoading();
+        });
+
+        // Load user profile data
+        function loadUserProfile() {
+            if (!currentUser) return;
+
+            document.getElementById('displayName').textContent = currentUser.displayName || currentUser.username;
+            document.getElementById('editDisplayName').value = currentUser.displayName || '';
+            document.getElementById('editUsername').value = currentUser.username;
+            document.getElementById('editRole').value = currentUser.role || 'user';
+            document.getElementById('memberSince').value = formatDate(currentUser.createdAt);
+            document.getElementById('lastLogin').value = formatDate(currentUser.lastLogin);
+
+            const roleBadge = document.getElementById('roleBadge');
+            roleBadge.textContent = currentUser.role || 'user';
+            roleBadge.className = 'role-badge ' + (currentUser.role || 'user');
+        }
+
+        // Load preferences
+        function loadPreferences() {
+            const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+            themeSwitch.checked = preferences.darkMode || false;
+            notificationSwitch.checked = preferences.notifications || false;
+            autoLogoutSelect.value = preferences.autoLogout || '30';
+
+            // Apply theme
+            if (preferences.darkMode) {
+                document.body.classList.add('dark-theme');
+                themeToggle.querySelector('i').className = 'fas fa-sun';
+            } else {
+                document.body.classList.remove('dark-theme');
+                themeToggle.querySelector('i').className = 'fas fa-moon';
+            }
+        }
+
+        // Load support info
+        function loadSupportInfo() {
+            const supportInfo = JSON.parse(localStorage.getItem('supportInfo')) || {};
+            document.getElementById('contactNumber').value = supportInfo.contactNumber || '';
+            document.getElementById('whatsappGroup').value = supportInfo.whatsappGroup || '';
+            document.getElementById('whatsappNumber').value = supportInfo.whatsappNumber || '';
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Show toast notification
+        function showToast(message, type) {
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            loadingOverlay.classList.add('hidden');
+        }
+
+        // Theme toggle
+        themeToggle.addEventListener('click', function() {
+            const isDark = document.body.classList.toggle('dark-theme');
+            themeSwitch.checked = isDark;
+
+            const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+            preferences.darkMode = isDark;
+            localStorage.setItem('userPreferences', JSON.stringify(preferences));
+
+            if (isDark) {
+                themeToggle.querySelector('i').className = 'fas fa-sun';
+            } else {
+                themeToggle.querySelector('i').className = 'fas fa-moon';
+            }
+        });
+
+        // Theme switch change
+        themeSwitch.addEventListener('change', function() {
+            const isDark = this.checked;
+            document.body.classList.toggle('dark-theme', isDark);
+
+            const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+            preferences.darkMode = isDark;
+            localStorage.setItem('userPreferences', JSON.stringify(preferences));
+
+            if (isDark) {
+                themeToggle.querySelector('i').className = 'fas fa-sun';
+            } else {
+                themeToggle.querySelector('i').className = 'fas fa-moon';
+            }
+        });
+
+        // Notification switch
+        notificationSwitch.addEventListener('change', function() {
+            const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+            preferences.notifications = this.checked;
+            localStorage.setItem('userPreferences', JSON.stringify(preferences));
+            showToast('Notification preference saved', 'success');
+        });
+
+        // Auto-logout select
+        autoLogoutSelect.addEventListener('change', function() {
+            const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+            preferences.autoLogout = this.value;
+            localStorage.setItem('userPreferences', JSON.stringify(preferences));
+            showToast('Auto-logout preference saved', 'success');
+        });
+
+        // Profile form submit
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const displayName = document.getElementById('editDisplayName').value.trim();
+
+            if (!displayName) {
+                showToast('Display name cannot be empty', 'error');
+                return;
+            }
+
+            currentUser.displayName = displayName;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            // Update in users array
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.username === currentUser.username);
+            if (userIndex !== -1) {
+                users[userIndex].displayName = displayName;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+
+            document.getElementById('displayName').textContent = displayName;
+            showToast('Profile updated successfully', 'success');
+        });
+
+        // Password strength check
+        document.getElementById('newPassword').addEventListener('input', function() {
+            const password = this.value;
+            const strengthContainer = document.getElementById('passwordStrength');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+
+            if (password.length === 0) {
+                strengthContainer.style.display = 'none';
+                return;
+            }
+
+            strengthContainer.style.display = 'block';
+            let strength = 0;
+
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+            strengthFill.className = 'strength-fill';
+            if (strength <= 1) {
+                strengthFill.classList.add('weak');
+                strengthText.textContent = 'Weak';
+            } else if (strength <= 2) {
+                strengthFill.classList.add('fair');
+                strengthText.textContent = 'Fair';
+            } else if (strength <= 3) {
+                strengthFill.classList.add('good');
+                strengthText.textContent = 'Good';
+            } else {
+                strengthFill.classList.add('strong');
+                strengthText.textContent = 'Strong';
+            }
+        });
+
+        // Password form submit
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast('Please fill in all password fields', 'error');
+                return;
+            }
+
+            if (currentPassword !== currentUser.password) {
+                showToast('Current password is incorrect', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showToast('New password must be at least 6 characters', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showToast('New passwords do not match', 'error');
+                return;
+            }
+
+            currentUser.password = newPassword;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.username === currentUser.username);
+            if (userIndex !== -1) {
+                users[userIndex].password = newPassword;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('passwordStrength').style.display = 'none';
+
+            showToast('Password updated successfully', 'success');
+        });
+
+        // Support form submit
+        document.getElementById('supportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const supportInfo = {
+                contactNumber: document.getElementById('contactNumber').value.trim(),
+                whatsappGroup: document.getElementById('whatsappGroup').value.trim(),
+                whatsappNumber: document.getElementById('whatsappNumber').value.trim()
+            };
+
+            localStorage.setItem('supportInfo', JSON.stringify(supportInfo));
+            showToast('Support information saved', 'success');
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                window.location.href = '../login.html';
+            }
+        });
+    </script>
+</body>
+</html>

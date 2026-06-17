@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Stop Loss Assistant</title>
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .dash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .dash-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dash-header-left .logo-icon {
+      width: 36px;
+      height: 36px;
+      fill: var(--accent);
+      filter: drop-shadow(0 0 6px var(--accent-glow));
+    }
+    .dash-header-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .dash-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+      position: relative;
+    }
+    .header-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
+    .header-btn .notif-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 7px;
+      height: 7px;
+      background: var(--danger);
+      border-radius: 50%;
+      border: 2px solid var(--bg-primary);
+    }
+
+    .dash-welcome {
+      padding: 18px 16px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .robot-avatar {
+      width: 48px;
+      height: 48px;
+      fill: var(--accent);
+      filter: drop-shadow(0 0 8px var(--accent-glow));
+      flex-shrink: 0;
+    }
+    .welcome-text h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .welcome-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .dash-content {
+      padding: 8px 16px 96px;
+    }
+
+    .balance-card {
+      background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%);
+      border-radius: var(--radius-lg);
+      padding: 22px 20px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .balance-card::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 120px;
+      height: 120px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+    }
+    .balance-card::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: -20px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .balance-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .balance-label {
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .balance-label svg {
+      width: 20px;
+      height: 20px;
+      fill: rgba(255,255,255,0.85);
+    }
+    .balance-amount {
+      font-size: 34px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -1px;
+      position: relative;
+      z-index: 1;
+    }
+    .balance-card .set-balance-btn {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 12px;
+      backdrop-filter: blur(8px);
+    }
+    .balance-card .set-balance-btn:hover {
+      background: rgba(255,255,255,0.28);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      opacity: 0.06;
+    }
+    .stat-card.wins::after { background: var(--success); }
+    .stat-card.losses::after { background: var(--danger); }
+    .stat-card.winrate::after { background: var(--info); }
+    .stat-card.profit::after { background: var(--warning); }
+
+    .stat-icon.wins { background: var(--success-light); color: var(--success); }
+    .stat-icon.losses { background: var(--danger-light); color: var(--danger); }
+    .stat-icon.winrate { background: var(--info-light); color: var(--info); }
+    .stat-icon.profit { background: var(--warning-light); color: var(--warning); }
+
+    .stat-card.wins .stat-value { color: var(--success); }
+    .stat-card.losses .stat-value { color: var(--danger); }
+    .stat-card.winrate .stat-value { color: var(--info); }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 2px solid transparent;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .action-btn i { font-size: 20px; }
+    .action-btn.win {
+      background: var(--success-light);
+      color: var(--success);
+      border-color: rgba(34,197,94,0.2);
+    }
+    .action-btn.win:hover { background: var(--success); color: #fff; transform: translateY(-2px); }
+    .action-btn.loss {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: rgba(239,68,68,0.2);
+    }
+    .action-btn.loss:hover { background: var(--danger); color: #fff; transform: translateY(-2px); }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i { color: var(--accent); font-size: 14px; }
+
+    .daily-card {
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .daily-card::before {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      width: 80px;
+      height: 80px;
+      background: var(--accent);
+      opacity: 0.04;
+      border-radius: 50%;
+    }
+    .daily-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .daily-item {
+      text-align: center;
+    }
+    .daily-item .val {
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .daily-item .lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .daily-item.today-wins .val { color: var(--success); }
+    .daily-item.today-losses .val { color: var(--danger); }
+    .daily-item.today-result .val { color: var(--accent); }
+    .daily-item.today-result .val.negative { color: var(--danger); }
+    .daily-item.today-result .val.positive { color: var(--success); }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+    .activity-item:hover { border-color: var(--accent); }
+    .activity-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .activity-icon.win { background: var(--success-light); color: var(--success); }
+    .activity-icon.loss { background: var(--danger-light); color: var(--danger); }
+    .activity-icon.balance { background: var(--info-light); color: var(--info); }
+    .activity-details { flex: 1; min-width: 0; }
+    .activity-details .desc {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .activity-details .time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+    .activity-amount {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .activity-amount.positive { color: var(--success); }
+    .activity-amount.negative { color: var(--danger); }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 64px;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 600;
+      transition: var(--transition);
+      border-radius: var(--radius-sm);
+      min-width: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item i { font-size: 20px; transition: var(--transition); }
+    .nav-item:hover { color: var(--accent); }
+    .nav-item.active { color: var(--accent); }
+    .nav-item.active i { transform: scale(1.15); }
+
+    @media (min-width: 480px) {
+      .stats-grid { gap: 16px; }
+      .stat-value { font-size: 28px; }
+      .balance-amount { font-size: 42px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="app">
+    <!-- Header -->
+    <header class="dash-header">
+      <div class="dash-header-left">
+        <svg class="logo-icon" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 2L4 10v12c0 9.4 6.8 18.2 16 20 9.2-1.8 16-10.6 16-20V10L20 2zm0 4l14 7v10c0 7.8-5.6 15.1-14 16.7C9.6 38.1 4 30.8 4 23V13l14-7z"/>
+          <path d="M20 12a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+        </svg>
+        <span class="dash-header-title">Stop Loss Assistant</span>
+      </div>
+      <div class="dash-header-right">
+        <button class="header-btn" id="themeToggle" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button class="header-btn" id="notifBtn" title="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot" id="notifDot" style="display:none"></span>
+        </button>
+        <button class="header-btn" id="logoutBtn" title="Logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Welcome -->
+    <div class="dash-welcome animate-fade-in">
+      <svg class="robot-avatar" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="12" y="16" width="36" height="32" rx="8" fill="currentColor" opacity="0.15"/>
+        <rect x="14" y="18" width="32" height="28" rx="6" stroke="currentColor" stroke-width="2" fill="none"/>
+        <circle cx="22" cy="30" r="3" fill="currentColor"/>
+        <circle cx="38" cy="30" r="3" fill="currentColor"/>
+        <path d="M22 38c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <rect x="26" y="8" width="8" height="10" rx="2" fill="currentColor" opacity="0.3"/>
+        <circle cx="30" cy="6" r="3" fill="currentColor" opacity="0.4"/>
+        <line x1="8" y1="28" x2="14" y2="28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="46" y1="28" x2="52" y2="28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="welcome-text">
+        <h2 id="welcomeName">Welcome back!</h2>
+        <p>Track your trades and stay disciplined</p>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="dash-content">
+      <!-- Balance Card -->
+      <div class="balance-card animate-slide-up" style="animation-delay:0.05s">
+        <div class="balance-top">
+          <span class="balance-label">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 3.9l6 2.67v4.43c0 4.48-2.75 8.72-6 9.84-3.25-1.12-6-5.36-6-9.84V7.57l6-2.67z"/>
+            </svg>
+            Current Balance
+          </span>
+          <span class="badge badge-info" id="balanceStatus">No balance set</span>
+        </div>
+        <div class="balance-amount" id="balanceDisplay">Rs. 0.00</div>
+        <button class="set-balance-btn" onclick="openSetBalance()">
+          <i class="fas fa-edit"></i> Set Balance
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card wins animate-slide-up" style="animation-delay:0.1s">
+          <div class="stat-icon wins"><i class="fas fa-trophy"></i></div>
+          <div class="stat-value" id="totalWins">0</div>
+          <div class="stat-label">Total Wins</div>
+        </div>
+        <div class="stat-card losses animate-slide-up" style="animation-delay:0.15s">
+          <div class="stat-icon losses"><i class="fas fa-times-circle"></i></div>
+          <div class="stat-value" id="totalLosses">0</div>
+          <div class="stat-label">Total Losses</div>
+        </div>
+        <div class="stat-card winrate animate-slide-up" style="animation-delay:0.2s">
+          <div class="stat-icon winrate"><i class="fas fa-chart-line"></i></div>
+          <div class="stat-value" id="winRate">0%</div>
+          <div class="stat-label">Win Rate</div>
+        </div>
+        <div class="stat-card profit animate-slide-up" style="animation-delay:0.25s">
+          <div class="stat-icon profit"><i class="fas fa-wallet"></i></div>
+          <div class="stat-value" id="netProfit">Rs. 0.00</div>
+          <div class="stat-label">Net Profit</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <button class="action-btn win animate-slide-up" style="animation-delay:0.3s" onclick="openRecordResult('win')">
+          <i class="fas fa-arrow-up"></i> Record Win
+        </button>
+        <button class="action-btn loss animate-slide-up" style="animation-delay:0.35s" onclick="openRecordResult('loss')">
+          <i class="fas fa-arrow-down"></i> Record Loss
+        </button>
+      </div>
+
+      <!-- Daily Summary -->
+      <div class="card daily-card animate-slide-up" style="animation-delay:0.4s">
+        <div class="section-title"><i class="fas fa-calendar-day"></i> Today's Summary</div>
+        <div class="daily-grid">
+          <div class="daily-item today-wins">
+            <div class="val" id="todayWins">0</div>
+            <div class="lbl">Wins</div>
+          </div>
+          <div class="daily-item today-losses">
+            <div class="val" id="todayLosses">0</div>
+            <div class="lbl">Losses</div>
+          </div>
+          <div class="daily-item today-result">
+            <div class="val" id="todayResult">Rs. 0.00</div>
+            <div class="lbl">Result</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="section-title" style="margin-top:8px"><i class="fas fa-history"></i> Recent Activity</div>
+      <div class="activity-list" id="activityList">
+        <div class="empty-state" id="emptyActivity">
+          <i class="fas fa-clock"></i>
+          <p>No activity yet</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="user-dashboard.html" class="nav-item active">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="user-games.html" class="nav-item">
+        <i class="fas fa-gamepad"></i>
+        <span>Games</span>
+      </a>
+      <a href="user-bot.html" class="nav-item">
+        <i class="fas fa-robot"></i>
+        <span>Bot</span>
+      </a>
+      <a href="user-history.html" class="nav-item">
+        <i class="fas fa-history"></i>
+        <span>History</span>
+      </a>
+      <a href="user-profile.html" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../shared/db.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    let currentUser = null;
+    let currentBalance = 0;
+
+    async function init() {
+      await app.init();
+      const session = await auth.validateSession();
+      if (!session) {
+        window.location.href = '../login.html';
+        return;
+      }
+      currentUser = session.user;
+      document.getElementById('welcomeName').textContent = `Welcome back, ${currentUser.displayName}!`;
+
+      storage.setTheme(storage.getTheme());
+      updateThemeIcon();
+
+      await loadDashboard();
+    }
+
+    async function loadDashboard() {
+      await loadBalance();
+      await loadStats();
+      await loadDailySummary();
+      await loadActivity();
+    }
+
+    async function loadBalance() {
+      const balances = await db.getByIndex('balances', 'userId', currentUser.userId);
+      if (balances.length > 0) {
+        const latest = balances.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        currentBalance = latest.amount;
+        document.getElementById('balanceDisplay').textContent = 'Rs. ' + currentBalance.toFixed(2);
+        document.getElementById('balanceStatus').textContent = latest.note || 'Set';
+        document.getElementById('balanceStatus').className = 'badge badge-success';
+      } else {
+        currentBalance = 0;
+        document.getElementById('balanceDisplay').textContent = 'Rs. 0.00';
+        document.getElementById('balanceStatus').textContent = 'No balance set';
+        document.getElementById('balanceStatus').className = 'badge badge-info';
+      }
+    }
+
+    async function loadStats() {
+      const results = await db.getByIndex('results', 'userId', currentUser.userId);
+      const wins = results.filter(r => r.type === 'win');
+      const losses = results.filter(r => r.type === 'loss');
+      const totalWins = wins.length;
+      const totalLosses = losses.length;
+      const total = totalWins + totalLosses;
+      const winRate = total > 0 ? ((totalWins / total) * 100).toFixed(0) : 0;
+      const netProfit = results.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+      document.getElementById('totalWins').textContent = totalWins;
+      document.getElementById('totalLosses').textContent = totalLosses;
+      document.getElementById('winRate').textContent = winRate + '%';
+      document.getElementById('netProfit').textContent = 'Rs. ' + netProfit.toFixed(2);
+    }
+
+    async function loadDailySummary() {
+      const today = new Date().toISOString().split('T')[0];
+      const results = await db.getByIndex('results', 'userId', currentUser.userId);
+      const todayResults = results.filter(r => r.date === today);
+      const todayWins = todayResults.filter(r => r.type === 'win').length;
+      const todayLosses = todayResults.filter(r => r.type === 'loss').length;
+      const todayProfit = todayResults.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+      document.getElementById('todayWins').textContent = todayWins;
+      document.getElementById('todayLosses').textContent = todayLosses;
+      const resultEl = document.getElementById('todayResult');
+      resultEl.textContent = 'Rs. ' + todayProfit.toFixed(2);
+      resultEl.className = 'val ' + (todayProfit > 0 ? 'positive' : todayProfit < 0 ? 'negative' : '');
+    }
+
+    async function loadActivity() {
+      const activities = await db.getByIndex('activityTimeline', 'userId', currentUser.userId);
+      const list = document.getElementById('activityList');
+      const empty = document.getElementById('emptyActivity');
+
+      if (activities.length === 0) {
+        list.innerHTML = '';
+        list.appendChild(createEmptyState());
+        return;
+      }
+
+      const sorted = activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
+      list.innerHTML = '';
+      sorted.forEach(a => {
+        const item = document.createElement('div');
+        item.className = 'activity-item';
+        const iconClass = a.type === 'win' ? 'win' : a.type === 'loss' ? 'loss' : 'balance';
+        const icon = a.type === 'win' ? 'fa-arrow-up' : a.type === 'loss' ? 'fa-arrow-down' : 'fa-wallet';
+        const amountClass = a.type === 'win' ? 'positive' : a.type === 'loss' ? 'negative' : '';
+        item.innerHTML = `
+          <div class="activity-icon ${iconClass}"><i class="fas ${icon}"></i></div>
+          <div class="activity-details">
+            <div class="desc">${escapeHtml(a.description)}</div>
+            <div class="time">${app.timeAgo(a.timestamp)}</div>
+          </div>
+          ${a.amount != null ? `<div class="activity-amount ${amountClass}">${a.type === 'win' ? '+' : '-'}Rs. ${Math.abs(a.amount).toFixed(2)}</div>` : ''}
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function createEmptyState() {
+      const div = document.createElement('div');
+      div.className = 'empty-state';
+      div.id = 'emptyActivity';
+      div.innerHTML = '<i class="fas fa-clock"></i><p>No activity yet</p>';
+      return div;
+    }
+
+    function openSetBalance() {
+      app.showModal('Set Balance', `
+        <div class="form-group">
+          <label class="form-label">Amount (Rs.)</label>
+          <input type="number" class="form-input" id="balanceAmount" placeholder="Enter balance amount" min="0" step="0.01" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note (optional)</label>
+          <input type="text" class="form-input" id="balanceNote" placeholder="e.g. Starting capital" maxlength="50">
+        </div>
+      `, [
+        { label: 'Cancel', class: 'btn-outline', onclick: "this.closest('.modal-overlay').remove()" },
+        { label: 'Save Balance', class: 'btn-primary', onclick: 'saveBalance()' }
+      ]);
+      setTimeout(() => document.getElementById('balanceAmount')?.focus(), 300);
+    }
+
+    async function saveBalance() {
+      const amount = parseFloat(document.getElementById('balanceAmount').value);
+      if (isNaN(amount) || amount < 0) {
+        app.toast('Please enter a valid amount', 'error');
+        return;
+      }
+      const note = document.getElementById('balanceNote').value.trim();
+      const today = new Date().toISOString().split('T')[0];
+
+      await db.put('balances', {
+        balanceId: app.generateId('bal'),
+        userId: currentUser.userId,
+        amount: amount,
+        note: note || 'Balance set',
+        date: today,
+        timestamp: new Date().toISOString()
+      });
+
+      await db.put('activityTimeline', {
+        activityId: app.generateId('act'),
+        userId: currentUser.userId,
+        type: 'balance',
+        description: `Balance set to Rs. ${amount.toFixed(2)}${note ? ' - ' + note : ''}`,
+        amount: amount,
+        timestamp: new Date().toISOString()
+      });
+
+      document.querySelector('.modal-overlay')?.remove();
+      await loadDashboard();
+      app.toast('Balance updated successfully', 'success');
+    }
+
+    function openRecordResult(type) {
+      const title = type === 'win' ? 'Record Win' : 'Record Loss';
+      const color = type === 'win' ? 'var(--success)' : 'var(--danger)';
+      app.showModal(title, `
+        <div class="form-group">
+          <label class="form-label">Amount (Rs.)</label>
+          <input type="number" class="form-input" id="resultAmount" placeholder="Enter amount" min="0" step="0.01" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note (optional)</label>
+          <input type="text" class="form-input" id="resultNote" placeholder="e.g. Game details" maxlength="50">
+        </div>
+      `, [
+        { label: 'Cancel', class: 'btn-outline', onclick: "this.closest('.modal-overlay').remove()" },
+        { label: type === 'win' ? 'Save Win' : 'Save Loss', class: type === 'win' ? 'btn-success' : 'btn-danger', onclick: `saveResult('${type}')` }
+      ]);
+      setTimeout(() => document.getElementById('resultAmount')?.focus(), 300);
+    }
+
+    async function saveResult(type) {
+      const amount = parseFloat(document.getElementById('resultAmount').value);
+      if (isNaN(amount) || amount <= 0) {
+        app.toast('Please enter a valid amount', 'error');
+        return;
+      }
+      const note = document.getElementById('resultNote').value.trim();
+      const today = new Date().toISOString().split('T')[0];
+      const signedAmount = type === 'win' ? amount : -amount;
+
+      await db.put('results', {
+        resultId: app.generateId('res'),
+        userId: currentUser.userId,
+        type: type,
+        amount: signedAmount,
+        note: note || '',
+        date: today,
+        timestamp: new Date().toISOString()
+      });
+
+      await db.put('activityTimeline', {
+        activityId: app.generateId('act'),
+        userId: currentUser.userId,
+        type: type,
+        description: `${type === 'win' ? 'Win' : 'Loss'} recorded${note ? ' - ' + note : ''}`,
+        amount: amount,
+        timestamp: new Date().toISOString()
+      });
+
+      document.querySelector('.modal-overlay')?.remove();
+      await loadDashboard();
+      app.toast(`${type === 'win' ? 'Win' : 'Loss'} recorded successfully`, 'success');
+    }
+
+    function updateThemeIcon() {
+      const icon = document.querySelector('#themeToggle i');
+      icon.className = storage.getTheme() === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      storage.toggleTheme();
+      updateThemeIcon();
+      app.toast('Theme updated', 'info');
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      app.showModal('Logout', '<p style="text-align:center;padding:8px 0">Are you sure you want to logout?</p>', [
+        { label: 'Cancel', class: 'btn-outline', onclick: "this.closest('.modal-overlay').remove()" },
+        { label: 'Logout', class: 'btn-danger', onclick: 'confirmLogout()' }
+      ]);
+    });
+
+    async function confirmLogout() {
+      document.querySelector('.modal-overlay')?.remove();
+      await auth.logout();
+      window.location.href = '../login.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

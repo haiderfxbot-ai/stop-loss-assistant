@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limbo - Stop Loss Assistant</title>
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--accent-blue);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--accent-blue);
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--text-secondary);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Balance Display */
+        .balance-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .balance-amount {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+
+        /* Game Container */
+        .game-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Multiplier Display */
+        .multiplier-display {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            border: 2px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .multiplier-display.win-flash {
+            animation: winFlash 0.5s ease;
+            border-color: var(--accent-green);
+        }
+
+        .multiplier-display.loss-flash {
+            animation: lossFlash 0.5s ease;
+            border-color: var(--accent-red);
+        }
+
+        @keyframes winFlash {
+            0%, 100% { background: var(--bg-secondary); }
+            50% { background: rgba(34, 197, 94, 0.2); }
+        }
+
+        @keyframes lossFlash {
+            0%, 100% { background: var(--bg-secondary); }
+            50% { background: rgba(239, 68, 68, 0.2); }
+        }
+
+        .multiplier-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .multiplier-value {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+        .multiplier-value.rolling {
+            animation: numberRoll 0.1s linear infinite;
+        }
+
+        .multiplier-value.win {
+            color: var(--accent-green);
+            animation: winCelebrate 0.5s ease;
+        }
+
+        .multiplier-value.loss {
+            color: var(--accent-red);
+            animation: lossShake 0.5s ease;
+        }
+
+        @keyframes numberRoll {
+            0% { transform: translateY(-2px); }
+            50% { transform: translateY(2px); }
+            100% { transform: translateY(-2px); }
+        }
+
+        @keyframes winCelebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes lossShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .target-display {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .target-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .target-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        /* Game Controls */
+        .game-controls {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .game-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            padding-right: 3rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .game-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .quick-bets {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .quick-bet-btn {
+            flex: 1;
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-bet-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .multiplier-presets {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .preset-btn {
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Bet Button */
+        .bet-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent-blue), #3b82f6);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.125rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bet-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .bet-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .bet-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        /* History Section */
+        .history-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            color: var(--accent-blue);
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .history-item {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+
+        .history-item:hover {
+            transform: scale(1.05);
+        }
+
+        .history-item.win {
+            border-color: var(--accent-green);
+        }
+
+        .history-item.loss {
+            border-color: var(--accent-red);
+        }
+
+        .history-multiplier {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .history-item.win .history-multiplier {
+            color: var(--accent-green);
+        }
+
+        .history-item.loss .history-multiplier {
+            color: var(--accent-red);
+        }
+
+        .history-target {
+            font-size: 0.625rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Pattern Signal Section */
+        .pattern-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .pattern-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .pattern-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+
+        .pattern-status.bullish {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+        }
+
+        .pattern-status.bearish {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
+        .pattern-status.neutral {
+            background: rgba(156, 163, 175, 0.15);
+            color: var(--text-secondary);
+        }
+
+        .pattern-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .bullish .pattern-status-dot {
+            background: var(--accent-green);
+        }
+
+        .bearish .pattern-status-dot {
+            background: var(--accent-red);
+        }
+
+        .neutral .pattern-status-dot {
+            background: var(--text-secondary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pattern-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .pattern-card {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .pattern-card-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .pattern-card-value {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .suggested-bet {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            border: 2px dashed var(--accent-blue);
+        }
+
+        .suggested-bet-header {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .suggested-bet-value {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suggested-multiplier {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        .suggested-confidence {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* No Pattern Message */
+        .no-pattern {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .no-pattern i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        /* Result Overlay */
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .result-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .result-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: transform 0.3s;
+        }
+
+        .result-overlay.show .result-card {
+            transform: scale(1);
+        }
+
+        .result-card.win {
+            border: 3px solid var(--accent-green);
+        }
+
+        .result-card.loss {
+            border: 3px solid var(--accent-red);
+        }
+
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-card.win .result-icon {
+            color: var(--accent-green);
+        }
+
+        .result-card.loss .result-icon {
+            color: var(--accent-red);
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-card.win .result-title {
+            color: var(--accent-green);
+        }
+
+        .result-card.loss .result-title {
+            color: var(--accent-red);
+        }
+
+        .result-multiplier {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+
+        .result-card.win .result-multiplier {
+            color: var(--accent-green);
+        }
+
+        .result-card.loss .result-multiplier {
+            color: var(--accent-red);
+        }
+
+        .result-profit {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card.win .result-profit {
+            color: var(--accent-green);
+        }
+
+        .result-card.loss .result-profit {
+            color: var(--accent-red);
+        }
+
+        .result-close-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .result-close-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="window.location.href='user-games.html'">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1 class="header-title">Limbo</h1>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+        </button>
+    </header>
+
+    <div class="balance-display">
+        <i class="fas fa-wallet" style="color: var(--accent-blue);"></i>
+        <span>Balance:</span>
+        <span class="balance-amount" id="balance">$0.00</span>
+    </div>
+
+    <main class="game-container">
+        <div class="multiplier-display" id="multiplierDisplay">
+            <div class="multiplier-label">Result</div>
+            <div class="multiplier-value" id="resultMultiplier">0.00x</div>
+            <div class="target-display">
+                <div class="target-label">Your Target</div>
+                <div class="target-value" id="targetDisplay">2.00x</div>
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <div class="input-group">
+                <div class="input-label">
+                    <span>Bet Amount</span>
+                    <span id="maxBet" style="color: var(--accent-blue); cursor: pointer;">Max</span>
+                </div>
+                <div class="input-wrapper">
+                    <input type="number" class="game-input" id="betAmount" value="1.00" min="0.10" step="0.10">
+                    <span class="input-suffix">$</span>
+                </div>
+                <div class="quick-bets">
+                    <button class="quick-bet-btn" onclick="setQuickBet(0.50)">$0.50</button>
+                    <button class="quick-bet-btn" onclick="setQuickBet(1.00)">$1.00</button>
+                    <button class="quick-bet-btn" onclick="setQuickBet(5.00)">$5.00</button>
+                    <button class="quick-bet-btn" onclick="setQuickBet(10.00)">$10.00</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div class="input-label">
+                    <span>Target Multiplier</span>
+                </div>
+                <div class="input-wrapper">
+                    <input type="number" class="game-input" id="targetMultiplier" value="2.00" min="1.01" step="0.01">
+                    <span class="input-suffix">x</span>
+                </div>
+                <div class="multiplier-presets">
+                    <button class="preset-btn" onclick="setPreset(1.50)">1.50x</button>
+                    <button class="preset-btn" onclick="setPreset(2.00)">2.00x</button>
+                    <button class="preset-btn" onclick="setPreset(3.00)">3.00x</button>
+                    <button class="preset-btn" onclick="setPreset(5.00)">5.00x</button>
+                    <button class="preset-btn" onclick="setPreset(10.00)">10.00x</button>
+                    <button class="preset-btn" onclick="setPreset(50.00)">50.00x</button>
+                    <button class="preset-btn" onclick="setPreset(100.00)">100x</button>
+                    <button class="preset-btn" onclick="setPreset(1000.00)">1000x</button>
+                </div>
+            </div>
+
+            <button class="bet-btn" id="betBtn" onclick="placeBet()">
+                <i class="fas fa-play"></i> Place Bet
+            </button>
+        </div>
+
+        <div class="history-section">
+            <div class="section-title">
+                <i class="fas fa-history"></i>
+                Recent Results
+            </div>
+            <div class="history-grid" id="historyGrid">
+                <!-- History items will be populated here -->
+            </div>
+        </div>
+
+        <div class="pattern-section">
+            <div class="pattern-header">
+                <div class="section-title" style="margin-bottom: 0;">
+                    <i class="fas fa-chart-line"></i>
+                    Pattern Signal
+                </div>
+                <div class="pattern-status neutral" id="patternStatus">
+                    <span class="pattern-status-dot"></span>
+                    <span id="patternStatusText">Loading...</span>
+                </div>
+            </div>
+            
+            <div id="patternContent">
+                <div class="no-pattern">
+                    <i class="fas fa-search"></i>
+                    <p>Analyzing patterns...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-card" id="resultCard">
+            <div class="result-icon" id="resultIcon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="result-title" id="resultTitle">You Win!</div>
+            <div class="result-multiplier" id="resultMultiplierDisplay">0.00x</div>
+            <div class="result-profit" id="resultProfit">+$0.00</div>
+            <button class="result-close-btn" onclick="closeResult()">Continue</button>
+        </div>
+    </div>
+
+    <script src="../shared/db.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/app.js"></script>
+    <script>
+        let balance = 0;
+        let isPlaying = false;
+        let history = [];
+        let currentPattern = null;
+
+        // Session validation
+        async function validateSession() {
+            try {
+                if (typeof Auth !== 'undefined' && Auth.validateSession) {
+                    const session = await Auth.validateSession();
+                    if (!session) {
+                        window.location.href = '../index.html';
+                        return false;
+                    }
+                    return true;
+                }
+                return true;
+            } catch (error) {
+                console.error('Session validation error:', error);
+                return true;
+            }
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const icon = document.querySelector('.theme-toggle i');
+            if (document.body.classList.contains('dark-theme')) {
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.querySelector('.theme-toggle i').className = 'fas fa-sun';
+            }
+        }
+
+        // Load balance from IndexedDB
+        async function loadBalance() {
+            try {
+                if (typeof DB !== 'undefined' && DB.getBalance) {
+                    balance = await DB.getBalance();
+                } else {
+                    balance = parseFloat(localStorage.getItem('balance') || '1000.00');
+                }
+                updateBalanceDisplay();
+            } catch (error) {
+                console.error('Error loading balance:', error);
+                balance = parseFloat(localStorage.getItem('balance') || '1000.00');
+                updateBalanceDisplay();
+            }
+        }
+
+        function updateBalanceDisplay() {
+            document.getElementById('balance').textContent = '$' + balance.toFixed(2);
+        }
+
+        async function saveBalance() {
+            try {
+                if (typeof DB !== 'undefined' && DB.updateBalance) {
+                    await DB.updateBalance(balance);
+                } else {
+                    localStorage.setItem('balance', balance.toString());
+                }
+            } catch (error) {
+                console.error('Error saving balance:', error);
+                localStorage.setItem('balance', balance.toString());
+            }
+        }
+
+        // Set quick bet amount
+        function setQuickBet(amount) {
+            document.getElementById('betAmount').value = amount.toFixed(2);
+        }
+
+        // Set preset multiplier
+        function setPreset(multiplier) {
+            document.getElementById('targetMultiplier').value = multiplier.toFixed(2);
+            document.getElementById('targetDisplay').textContent = multiplier.toFixed(2) + 'x';
+        }
+
+        // Update target display when input changes
+        document.getElementById('targetMultiplier').addEventListener('input', function() {
+            const value = parseFloat(this.value) || 2.00;
+            document.getElementById('targetDisplay').textContent = value.toFixed(2) + 'x';
+        });
+
+        // Max bet button
+        document.getElementById('maxBet').addEventListener('click', function() {
+            document.getElementById('betAmount').value = balance.toFixed(2);
+        });
+
+        // Generate random multiplier with house edge
+        function generateMultiplier() {
+            const houseEdge = 0.01; // 1% house edge
+            const random = Math.random();
+            const multiplier = (1 - houseEdge) / random;
+            return Math.max(1.00, Math.min(multiplier, 10000));
+        }
+
+        // Number rolling animation
+        function startRolling(callback) {
+            const resultEl = document.getElementById('resultMultiplier');
+            resultEl.classList.add('rolling');
+            
+            let rollCount = 0;
+            const maxRolls = 20;
+            const interval = setInterval(() => {
+                resultEl.textContent = (Math.random() * 100 + 1).toFixed(2) + 'x';
+                rollCount++;
+                
+                if (rollCount >= maxRolls) {
+                    clearInterval(interval);
+                    resultEl.classList.remove('rolling');
+                    callback();
+                }
+            }, 50);
+        }
+
+        // Place bet
+        async function placeBet() {
+            if (isPlaying) return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+            const targetMultiplier = parseFloat(document.getElementById('targetMultiplier').value);
+
+            if (isNaN(betAmount) || betAmount <= 0) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            if (betAmount > balance) {
+                alert('Insufficient balance');
+                return;
+            }
+
+            if (isNaN(targetMultiplier) || targetMultiplier < 1.01) {
+                alert('Target multiplier must be at least 1.01x');
+                return;
+            }
+
+            isPlaying = true;
+            const betBtn = document.getElementById('betBtn');
+            betBtn.disabled = true;
+            betBtn.innerHTML = '<span class="loading-spinner"></span> Rolling...';
+
+            // Deduct bet from balance
+            balance -= betAmount;
+            await saveBalance();
+            updateBalanceDisplay();
+
+            // Start rolling animation
+            startRolling(() => {
+                const resultMultiplier = generateMultiplier();
+                const won = resultMultiplier >= targetMultiplier;
+                const profit = won ? betAmount * (targetMultiplier - 1) : -betAmount;
+
+                if (won) {
+                    balance += betAmount + profit;
+                    saveBalance();
+                    updateBalanceDisplay();
+                }
+
+                // Show result
+                showResult(won, resultMultiplier, targetMultiplier, betAmount, profit);
+
+                // Add to history
+                addHistory(resultMultiplier, targetMultiplier, won);
+
+                // Reset game state
+                setTimeout(() => {
+                    isPlaying = false;
+                    betBtn.disabled = false;
+                    betBtn.innerHTML = '<i class="fas fa-play"></i> Place Bet';
+                }, 500);
+            });
+        }
+
+        // Show result
+        function showResult(won, resultMultiplier, targetMultiplier, betAmount, profit) {
+            const overlay = document.getElementById('resultOverlay');
+            const card = document.getElementById('resultCard');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const multiplierDisplay = document.getElementById('resultMultiplierDisplay');
+            const profitDisplay = document.getElementById('resultProfit');
+            const display = document.getElementById('multiplierDisplay');
+            const resultEl = document.getElementById('resultMultiplier');
+
+            // Update result display
+            resultEl.textContent = resultMultiplier.toFixed(2) + 'x';
+
+            if (won) {
+                card.className = 'result-card win';
+                icon.innerHTML = '<i class="fas fa-trophy"></i>';
+                title.textContent = 'You Win!';
+                resultEl.classList.add('win');
+                display.classList.add('win-flash');
+            } else {
+                card.className = 'result-card loss';
+                icon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                title.textContent = 'You Lose';
+                resultEl.classList.add('loss');
+                display.classList.add('loss-flash');
+            }
+
+            multiplierDisplay.textContent = resultMultiplier.toFixed(2) + 'x';
+            profitDisplay.textContent = (profit >= 0 ? '+' : '') + '$' + Math.abs(profit).toFixed(2);
+
+            overlay.classList.add('show');
+
+            // Remove animation classes after animation
+            setTimeout(() => {
+                resultEl.classList.remove('win', 'loss');
+                display.classList.remove('win-flash', 'loss-flash');
+            }, 1000);
+        }
+
+        // Close result overlay
+        function closeResult() {
+            document.getElementById('resultOverlay').classList.remove('show');
+        }
+
+        // Add to history
+        function addHistory(resultMultiplier, targetMultiplier, won) {
+            history.unshift({
+                result: resultMultiplier,
+                target: targetMultiplier,
+                won: won,
+                timestamp: Date.now()
+            });
+
+            if (history.length > 20) {
+                history.pop();
+            }
+
+            renderHistory();
+            saveHistory();
+        }
+
+        // Render history
+        function renderHistory() {
+            const grid = document.getElementById('historyGrid');
+            grid.innerHTML = history.map(item => `
+                <div class="history-item ${item.won ? 'win' : 'loss'}">
+                    <div class="history-multiplier">${item.result.toFixed(2)}x</div>
+                    <div class="history-target">Target: ${item.target.toFixed(2)}x</div>
+                </div>
+            `).join('');
+        }
+
+        // Save/Load history from IndexedDB
+        async function saveHistory() {
+            try {
+                if (typeof DB !== 'undefined' && DB.saveGameHistory) {
+                    await DB.saveGameHistory('limbo', history);
+                } else {
+                    localStorage.setItem('limbo_history', JSON.stringify(history));
+                }
+            } catch (error) {
+                console.error('Error saving history:', error);
+                localStorage.setItem('limbo_history', JSON.stringify(history));
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                if (typeof DB !== 'undefined' && DB.getGameHistory) {
+                    history = await DB.getGameHistory('limbo') || [];
+                } else {
+                    const saved = localStorage.getItem('limbo_history');
+                    history = saved ? JSON.parse(saved) : [];
+                }
+                renderHistory();
+            } catch (error) {
+                console.error('Error loading history:', error);
+                const saved = localStorage.getItem('limbo_history');
+                history = saved ? JSON.parse(saved) : [];
+                renderHistory();
+            }
+        }
+
+        // Load patterns from IndexedDB
+        async function loadPatterns() {
+            try {
+                let patterns = [];
+                
+                if (typeof DB !== 'undefined' && DB.getPatterns) {
+                    patterns = await DB.getPatterns();
+                } else {
+                    const saved = localStorage.getItem('patterns');
+                    patterns = saved ? JSON.parse(saved) : [];
+                }
+
+                // Filter for limbo game type
+                const limboPatterns = patterns.filter(p => 
+                    p.gameType === 'limbo' || p.game === 'limbo'
+                );
+
+                if (limboPatterns.length > 0) {
+                    currentPattern = limboPatterns[limboPatterns.length - 1];
+                    displayPattern(currentPattern);
+                } else {
+                    displayNoPattern();
+                }
+            } catch (error) {
+                console.error('Error loading patterns:', error);
+                displayNoPattern();
+            }
+        }
+
+        // Display pattern
+        function displayPattern(pattern) {
+            const status = document.getElementById('patternStatus');
+            const statusText = document.getElementById('patternStatusText');
+            const content = document.getElementById('patternContent');
+
+            const signal = pattern.signal || pattern.direction || 'neutral';
+            
+            if (signal === 'bullish' || signal === 'up' || signal === 'high') {
+                status.className = 'pattern-status bullish';
+                statusText.textContent = 'Bullish';
+            } else if (signal === 'bearish' || signal === 'down' || signal === 'low') {
+                status.className = 'pattern-status bearish';
+                statusText.textContent = 'Bearish';
+            } else {
+                status.className = 'pattern-status neutral';
+                statusText.textContent = 'Neutral';
+            }
+
+            const suggestedMultiplier = pattern.suggestedMultiplier || pattern.target || 2.00;
+            const confidence = pattern.confidence || 50;
+            const winRate = pattern.winRate || pattern.winrate || 0;
+            const totalBets = pattern.totalBets || pattern.totalbets || 0;
+
+            content.innerHTML = `
+                <div class="pattern-details">
+                    <div class="pattern-card">
+                        <div class="pattern-card-label">Win Rate</div>
+                        <div class="pattern-card-value">${winRate.toFixed(1)}%</div>
+                    </div>
+                    <div class="pattern-card">
+                        <div class="pattern-card-label">Total Bets</div>
+                        <div class="pattern-card-value">${totalBets}</div>
+                    </div>
+                    <div class="pattern-card">
+                        <div class="pattern-card-label">Avg Multiplier</div>
+                        <div class="pattern-card-value">${(pattern.avgMultiplier || 2.00).toFixed(2)}x</div>
+                    </div>
+                    <div class="pattern-card">
+                        <div class="pattern-card-label">Best Streak</div>
+                        <div class="pattern-card-value">${pattern.bestStreak || 0}</div>
+                    </div>
+                </div>
+                <div class="suggested-bet">
+                    <div class="suggested-bet-header">Suggested Bet</div>
+                    <div class="suggested-bet-value">
+                        <span class="suggested-multiplier">${suggestedMultiplier.toFixed(2)}x</span>
+                        <span class="suggested-confidence">Confidence: ${confidence}%</span>
+                    </div>
+                    <button class="quick-bet-btn" style="margin-top: 0.5rem; width: 100%;" onclick="applySuggestion(${suggestedMultiplier})">
+                        Apply Suggestion
+                    </button>
+                </div>
+            `;
+        }
+
+        // Display no pattern message
+        function displayNoPattern() {
+            const status = document.getElementById('patternStatus');
+            const statusText = document.getElementById('patternStatusText');
+            const content = document.getElementById('patternContent');
+
+            status.className = 'pattern-status neutral';
+            statusText.textContent = 'No Data';
+
+            content.innerHTML = `
+                <div class="no-pattern">
+                    <i class="fas fa-search"></i>
+                    <p>No pattern data available for Limbo</p>
+                    <p style="font-size: 0.75rem; margin-top: 0.5rem;">Play some games to generate patterns</p>
+                </div>
+            `;
+        }
+
+        // Apply suggested multiplier
+        function applySuggestion(multiplier) {
+            document.getElementById('targetMultiplier').value = multiplier.toFixed(2);
+            document.getElementById('targetDisplay').textContent = multiplier.toFixed(2) + 'x';
+        }
+
+        // Initialize
+        async function init() {
+            await validateSession();
+            loadTheme();
+            await loadBalance();
+            await loadHistory();
+            await loadPatterns();
+        }
+
+        // Start app
+        init();
+    </script>
+</body>
+</html>

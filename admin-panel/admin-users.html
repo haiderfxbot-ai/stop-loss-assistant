@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin Panel</title>
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .page-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .page-header .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px 5px 0;
+        }
+        .page-header h1 {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        .page-header .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px 0 5px 10px;
+        }
+        .page-content {
+            padding: 15px 16px;
+            padding-bottom: 80px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .add-user-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-color, #4a90d9);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .search-bar {
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .search-bar i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .filter-tabs::-webkit-scrollbar { display: none; }
+        .filter-tab {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-tab.active {
+            background: var(--accent-color, #4a90d9);
+            color: #fff;
+            border-color: var(--accent-color, #4a90d9);
+        }
+        .user-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .user-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--accent-color, #4a90d9);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .user-info .username {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-info .display-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-badges {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .badge-admin {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+        }
+        .badge-user {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+        }
+        .badge-active {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+        .badge-disabled {
+            background: rgba(189, 189, 189, 0.15);
+            color: #999;
+        }
+        .user-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        .user-meta i {
+            font-size: 11px;
+        }
+        .user-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .user-actions button {
+            flex: 1;
+            padding: 9px 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        .user-actions .btn-edit:hover { background: rgba(52, 152, 219, 0.1); border-color: #3498db; color: #3498db; }
+        .user-actions .btn-delete:hover { background: rgba(231, 76, 60, 0.1); border-color: #e74c3c; color: #e74c3c; }
+        .user-actions .btn-toggle:hover { background: rgba(46, 204, 113, 0.1); border-color: #2ecc71; color: #2ecc71; }
+        .user-actions .btn-toggle.disabled-state:hover { background: rgba(241, 196, 15, 0.1); border-color: #f1c40f; color: #f1c40f; }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+        .empty-state p { font-size: 14px; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-primary);
+            border-radius: 16px 16px 0 0;
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 24px 20px 30px;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .modal-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            box-sizing: border-box;
+            appearance: auto;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color, #4a90d9);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 13px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .modal-actions .btn-cancel {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .modal-actions .btn-save {
+            background: var(--accent-color, #4a90d9);
+            color: #fff;
+        }
+        .confirm-modal .modal {
+            max-width: 360px;
+            text-align: center;
+            padding: 30px 24px;
+        }
+        .confirm-modal .modal i.warning-icon {
+            font-size: 48px;
+            color: #e74c3c;
+            margin-bottom: 16px;
+        }
+        .confirm-modal .modal h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin: 0 0 8px;
+        }
+        .confirm-modal .modal p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 0 0 24px;
+        }
+        .confirm-modal .modal-actions {
+            justify-content: center;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 100;
+        }
+        .bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 10px;
+            padding: 4px 8px;
+            transition: color 0.2s;
+        }
+        .bottom-nav a i { font-size: 20px; }
+        .bottom-nav a.active { color: var(--accent-color, #4a90d9); }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <button class="back-btn" onclick="location.href='admin-dashboard.html'">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1>Manage Users</h1>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+    </div>
+
+    <div class="page-content">
+        <button class="add-user-btn" onclick="openAddModal()">
+            <i class="fas fa-plus"></i> Add User
+        </button>
+
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search users..." oninput="filterUsers()">
+        </div>
+
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all" onclick="setFilter('all', this)">All</button>
+            <button class="filter-tab" data-filter="admin" onclick="setFilter('admin', this)">Admin</button>
+            <button class="filter-tab" data-filter="user" onclick="setFilter('user', this)">Users</button>
+            <button class="filter-tab" data-filter="active" onclick="setFilter('active', this)">Active</button>
+            <button class="filter-tab" data-filter="disabled" onclick="setFilter('disabled', this)">Disabled</button>
+        </div>
+
+        <div id="usersList"></div>
+    </div>
+
+    <div id="addModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add User</h2>
+                <button class="close-btn" onclick="closeModal('addModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="addUsername" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="addPassword" placeholder="Enter password">
+            </div>
+            <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" id="addDisplayName" placeholder="Enter display name">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="addRole">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="addStatus">
+                    <option value="active">Active</option>
+                    <option value="disabled">Disabled</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal('addModal')">Cancel</button>
+                <button class="btn-save" onclick="saveNewUser()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Edit User</h2>
+                <button class="close-btn" onclick="closeModal('editModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="hidden" id="editUserId">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="editUsername" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Password (leave blank to keep current)</label>
+                <input type="password" id="editPassword" placeholder="Enter new password">
+            </div>
+            <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" id="editDisplayName" placeholder="Enter display name">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="editRole">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="editStatus">
+                    <option value="active">Active</option>
+                    <option value="disabled">Disabled</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
+                <button class="btn-save" onclick="saveEditedUser()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal-overlay confirm-modal">
+        <div class="modal">
+            <i class="fas fa-exclamation-triangle warning-icon"></i>
+            <h3>Delete User</h3>
+            <p id="deleteConfirmText">Are you sure you want to delete this user? This action cannot be undone.</p>
+            <input type="hidden" id="deleteUserId">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+                <button class="btn-save" style="background:#e74c3c" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="admin-dashboard.html"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="admin-games.html"><i class="fas fa-gamepad"></i><span>Games</span></a>
+        <a href="admin-bot.html"><i class="fas fa-robot"></i><span>Bot</span></a>
+        <a href="admin-history.html"><i class="fas fa-clock-rotate-left"></i><span>History</span></a>
+        <a href="admin-profile.html"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script src="../shared/db.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/app.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let allUsers = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            validateSession();
+            loadUsers();
+            highlightActiveNav();
+        });
+
+        function validateSession() {
+            const user = auth.getCurrentUser();
+            if (!user || user.role !== 'admin') {
+                location.href = '../login.html';
+                return;
+            }
+        }
+
+        function highlightActiveNav() {
+            document.querySelectorAll('.bottom-nav a').forEach(a => {
+                if (a.href.includes('admin-users')) a.classList.add('active');
+            });
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.getElementById('themeIcon').className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function loadUsers() {
+            allUsers = db.getAll('users') || [];
+            renderUsers(allUsers);
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = allUsers;
+
+            if (currentFilter === 'admin') filtered = filtered.filter(u => u.role === 'admin');
+            else if (currentFilter === 'user') filtered = filtered.filter(u => u.role === 'user');
+            else if (currentFilter === 'active') filtered = filtered.filter(u => u.status === 'active');
+            else if (currentFilter === 'disabled') filtered = filtered.filter(u => u.status === 'disabled');
+
+            if (query) {
+                filtered = filtered.filter(u =>
+                    (u.username && u.username.toLowerCase().includes(query)) ||
+                    (u.displayName && u.displayName.toLowerCase().includes(query))
+                );
+            }
+
+            renderUsers(filtered);
+        }
+
+        function setFilter(filter, el) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            filterUsers();
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Never';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function renderUsers(users) {
+            const container = document.getElementById('usersList');
+            if (!users.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <p>No users found</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = users.map(user => `
+                <div class="user-card">
+                    <div class="user-card-header">
+                        <div class="user-avatar">${getInitials(user.displayName || user.username)}</div>
+                        <div class="user-info">
+                            <div class="username">${user.username}</div>
+                            <div class="display-name">${user.displayName || ''}</div>
+                        </div>
+                        <div class="user-badges">
+                            <span class="badge badge-${user.role}">${user.role}</span>
+                            <span class="badge badge-${user.status}">${user.status}</span>
+                        </div>
+                    </div>
+                    <div class="user-meta">
+                        <i class="fas fa-clock"></i> Last login: ${formatDate(user.lastLogin)}
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn-edit" onclick="openEditModal('${user.id}')"><i class="fas fa-pen"></i> Edit</button>
+                        <button class="btn-toggle ${user.status === 'disabled' ? 'disabled-state' : ''}" onclick="toggleUserStatus('${user.id}')">
+                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
+                            ${user.status === 'active' ? 'Disable' : 'Enable'}
+                        </button>
+                        <button class="btn-delete" onclick="openDeleteModal('${user.id}')"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openAddModal() {
+            document.getElementById('addUsername').value = '';
+            document.getElementById('addPassword').value = '';
+            document.getElementById('addDisplayName').value = '';
+            document.getElementById('addRole').value = 'user';
+            document.getElementById('addStatus').value = 'active';
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        function saveNewUser() {
+            const username = document.getElementById('addUsername').value.trim();
+            const password = document.getElementById('addPassword').value;
+            const displayName = document.getElementById('addDisplayName').value.trim();
+            const role = document.getElementById('addRole').value;
+            const status = document.getElementById('addStatus').value;
+
+            if (!username || !password) {
+                alert('Username and password are required.');
+                return;
+            }
+
+            const result = auth.createUser({
+                username,
+                password,
+                displayName: displayName || username,
+                role,
+                status
+            });
+
+            if (result.success) {
+                closeModal('addModal');
+                loadUsers();
+            } else {
+                alert(result.message || 'Failed to create user.');
+            }
+        }
+
+        function openEditModal(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            document.getElementById('editUserId').value = userId;
+            document.getElementById('editUsername').value = user.username;
+            document.getElementById('editPassword').value = '';
+            document.getElementById('editDisplayName').value = user.displayName || '';
+            document.getElementById('editRole').value = user.role;
+            document.getElementById('editStatus').value = user.status;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function saveEditedUser() {
+            const userId = document.getElementById('editUserId').value;
+            const username = document.getElementById('editUsername').value.trim();
+            const password = document.getElementById('editPassword').value;
+            const displayName = document.getElementById('editDisplayName').value.trim();
+            const role = document.getElementById('editRole').value;
+            const status = document.getElementById('editStatus').value;
+
+            if (!username) {
+                alert('Username is required.');
+                return;
+            }
+
+            const updateData = {
+                username,
+                displayName: displayName || username,
+                role,
+                status
+            };
+
+            if (password) {
+                updateData.password = password;
+            }
+
+            const result = auth.updateUser(userId, updateData);
+
+            if (result.success) {
+                closeModal('editModal');
+                loadUsers();
+            } else {
+                alert(result.message || 'Failed to update user.');
+            }
+        }
+
+        function openDeleteModal(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteConfirmText').textContent =
+                `Are you sure you want to delete "${user.username}"? This action cannot be undone.`;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function confirmDelete() {
+            const userId = document.getElementById('deleteUserId').value;
+            const result = auth.deleteUser(userId);
+
+            if (result.success) {
+                closeModal('deleteModal');
+                loadUsers();
+            } else {
+                alert(result.message || 'Failed to delete user.');
+            }
+        }
+
+        function toggleUserStatus(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            const newStatus = user.status === 'active' ? 'disabled' : 'active';
+            auth.updateUser(userId, { status: newStatus });
+            loadUsers();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+
+        function loadTheme() {
+            const saved = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            document.getElementById('themeIcon').className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        loadTheme();
+    </script>
+</body>
+</html>

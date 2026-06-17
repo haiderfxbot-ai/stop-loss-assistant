@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - User Panel</title>
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .tabs-container {
+            padding: 15px 20px 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 10px;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            flex-shrink: 0;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-primary);
+            color: #fff;
+        }
+
+        .tab-btn:hover {
+            opacity: 0.9;
+        }
+
+        .game-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 10px;
+            margin-right: 5px;
+            color: #fff;
+        }
+
+        .game-icon.aviator { background: #e74c3c; }
+        .game-icon.limbo { background: #9b59b6; }
+        .game-icon.mines { background: #e67e22; }
+        .game-icon.wingo { background: #3498db; }
+        .game-icon.all { background: #95a5a6; }
+
+        .date-filter-container {
+            padding: 10px 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .date-filter {
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .summary {
+            display: flex;
+            gap: 15px;
+            padding: 10px 20px;
+        }
+
+        .summary-card {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-card.wins {
+            border-left: 3px solid #27ae60;
+        }
+
+        .summary-card.losses {
+            border-left: 3px solid #e74c3c;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .summary-card.wins .summary-value {
+            color: #27ae60;
+        }
+
+        .summary-card.losses .summary-value {
+            color: #e74c3c;
+        }
+
+        .history-list {
+            padding: 10px 20px;
+        }
+
+        .history-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: transform 0.2s ease;
+        }
+
+        .history-item:active {
+            transform: scale(0.98);
+        }
+
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .history-game-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-item-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .history-result {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .history-result.win {
+            background: rgba(39, 174, 96, 0.15);
+            color: #27ae60;
+        }
+
+        .history-result.loss {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+        }
+
+        .history-amount {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .history-amount.win {
+            color: #27ae60;
+        }
+
+        .history-amount.loss {
+            color: #e74c3c;
+        }
+
+        .history-item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .history-signal {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-signal i {
+            margin-right: 5px;
+        }
+
+        .view-btn {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent-primary);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .view-btn:hover {
+            opacity: 0.85;
+        }
+
+        .empty-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .empty-state svg {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 280px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 10px;
+            padding: 5px 10px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: var(--accent-primary);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .nav-item span {
+            font-weight: 500;
+        }
+
+        @media (min-width: 768px) {
+            .history-list {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .summary {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .tabs-container {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .date-filter-container {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1 class="header-title">History</h1>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+        </button>
+    </header>
+
+    <div class="tabs-container">
+        <div class="tabs" id="tabs">
+            <button class="tab-btn active" data-game="all">
+                <span class="game-icon all"><i class="fas fa-globe"></i></span>All
+            </button>
+            <button class="tab-btn" data-game="aviator">
+                <span class="game-icon aviator"><i class="fas fa-plane"></i></span>Aviator
+            </button>
+            <button class="tab-btn" data-game="limbo">
+                <span class="game-icon limbo"><i class="fas fa-chart-line"></i></span>Limbo
+            </button>
+            <button class="tab-btn" data-game="mines">
+                <span class="game-icon mines"><i class="fas fa-bomb"></i></span>Mines
+            </button>
+            <button class="tab-btn" data-game="wingo">
+                <span class="game-icon wingo"><i class="fas fa-dice"></i></span>WinGo
+            </button>
+        </div>
+    </div>
+
+    <div class="date-filter-container">
+        <select class="date-filter" id="dateFilter" onchange="filterByDate()">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+        </select>
+    </div>
+
+    <div class="summary">
+        <div class="summary-card wins">
+            <div class="summary-label">Total Wins</div>
+            <div class="summary-value" id="totalWins">0</div>
+        </div>
+        <div class="summary-card losses">
+            <div class="summary-label">Total Losses</div>
+            <div class="summary-value" id="totalLosses">0</div>
+        </div>
+    </div>
+
+    <div class="history-list" id="historyList"></div>
+
+    <div class="empty-state" id="emptyState">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" fill-rule="evenodd">
+                <circle cx="100" cy="100" r="90" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                <circle cx="100" cy="80" r="25" fill="currentColor" opacity="0.2"/>
+                <rect x="75" y="105" width="50" height="35" rx="5" fill="currentColor" opacity="0.2"/>
+                <circle cx="70" cy="70" r="8" fill="currentColor" opacity="0.15"/>
+                <circle cx="130" cy="70" r="8" fill="currentColor" opacity="0.15"/>
+                <path d="M85 90 Q100 100 115 90" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.3"/>
+                <rect x="60" y="140" width="80" height="4" rx="2" fill="currentColor" opacity="0.15"/>
+                <rect x="70" y="150" width="60" height="4" rx="2" fill="currentColor" opacity="0.15"/>
+            </g>
+        </svg>
+        <p>No history records yet. Your game history will appear here.</p>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="user-dashboard.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="user-games.html" class="nav-item">
+            <i class="fas fa-gamepad"></i>
+            <span>Games</span>
+        </a>
+        <a href="user-bot.html" class="nav-item">
+            <i class="fas fa-robot"></i>
+            <span>Bot</span>
+        </a>
+        <a href="user-history.html" class="nav-item active">
+            <i class="fas fa-clock-rotate-left"></i>
+            <span>History</span>
+        </a>
+        <a href="user-profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script src="../shared/db.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/app.js"></script>
+    <script>
+        let allHistory = [];
+        let currentGameFilter = 'all';
+        let currentDateFilter = 'all';
+
+        function checkSession() {
+            const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            if (!user) {
+                window.location.href = '../login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+        }
+
+        function loadTheme() {
+            const saved = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = saved === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+
+        function getGameIcon(gameType) {
+            const icons = {
+                aviator: '<i class="fas fa-plane"></i>',
+                limbo: '<i class="fas fa-chart-line"></i>',
+                mines: '<i class="fas fa-bomb"></i>',
+                wingo: '<i class="fas fa-dice"></i>'
+            };
+            return icons[gameType] || '<i class="fas fa-gamepad"></i>';
+        }
+
+        function getGameIconClass(gameType) {
+            return gameType || 'all';
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            const now = new Date();
+            const diff = now - d;
+            const mins = Math.floor(diff / 60000);
+            const hrs = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (mins < 1) return 'Just now';
+            if (mins < 60) return `${mins}m ago`;
+            if (hrs < 24) return `${hrs}h ago`;
+            if (days < 7) return `${days}d ago`;
+
+            return d.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+            });
+        }
+
+        function formatTime(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function isInDateRange(dateStr, filter) {
+            if (filter === 'all') return true;
+            const d = new Date(dateStr);
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            if (filter === 'today') {
+                return d >= startOfDay;
+            }
+
+            if (filter === 'week') {
+                const startOfWeek = new Date(startOfDay);
+                startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+                return d >= startOfWeek;
+            }
+
+            if (filter === 'month') {
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                return d >= startOfMonth;
+            }
+
+            return true;
+        }
+
+        function filterByGame(gameType) {
+            currentGameFilter = gameType;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.game === gameType);
+            });
+            renderHistory();
+        }
+
+        function filterByDate() {
+            currentDateFilter = document.getElementById('dateFilter').value;
+            renderHistory();
+        }
+
+        function getFilteredHistory() {
+            return allHistory.filter(item => {
+                const gameMatch = currentGameFilter === 'all' || item.gameType === currentGameFilter;
+                const dateMatch = isInDateRange(item.timestamp || item.date, currentDateFilter);
+                return gameMatch && dateMatch;
+            });
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            const empty = document.getElementById('emptyState');
+            const filtered = getFilteredHistory();
+
+            let totalWins = 0;
+            let totalLosses = 0;
+
+            allHistory.forEach(item => {
+                if (item.result === 'win') totalWins++;
+                else totalLosses++;
+            });
+
+            document.getElementById('totalWins').textContent = totalWins;
+            document.getElementById('totalLosses').textContent = totalLosses;
+
+            if (filtered.length === 0) {
+                list.innerHTML = '';
+                empty.style.display = 'flex';
+                return;
+            }
+
+            empty.style.display = 'none';
+
+            filtered.sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
+
+            list.innerHTML = filtered.map(item => {
+                const isWin = item.result === 'win';
+                const dateStr = item.timestamp || item.date;
+                const amount = item.amount || item.betAmount || 0;
+                const payout = item.payout || 0;
+                const displayAmount = isWin ? `+${payout}` : `-${amount}`;
+
+                return `
+                    <div class="history-item">
+                        <div class="history-item-header">
+                            <div class="history-game-type">
+                                <span class="game-icon ${getGameIconClass(item.gameType)}">${getGameIcon(item.gameType)}</span>
+                                ${item.gameType ? item.gameType.charAt(0).toUpperCase() + item.gameType.slice(1) : 'Game'}
+                            </div>
+                            <div class="history-date">${formatDate(dateStr)} ${formatTime(dateStr)}</div>
+                        </div>
+                        <div class="history-item-body">
+                            <span class="history-result ${isWin ? 'win' : 'loss'}">${isWin ? 'Win' : 'Loss'}</span>
+                            <span class="history-amount ${isWin ? 'win' : 'loss'}">${displayAmount}</span>
+                        </div>
+                        <div class="history-item-footer">
+                            <span class="history-signal">
+                                ${item.signal || item.pattern ? `<i class="fas fa-signal"></i>${item.signal || item.pattern}` : ''}
+                            </span>
+                            <button class="view-btn" onclick="viewHistory('${item.id}')">View</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewHistory(id) {
+            window.location.href = `user-history-viewer.html?historyId=${id}`;
+        }
+
+        async function loadHistory() {
+            if (!checkSession()) return;
+
+            try {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                if (typeof openDB === 'function') {
+                    const db = await openDB();
+                    const tx = db.transaction('history', 'readonly');
+                    const store = tx.objectStore('history');
+                    const request = store.getAll();
+
+                    request.onsuccess = function() {
+                        allHistory = request.result.filter(h => h.userId === user.id || h.userId === user.uid);
+                        renderHistory();
+                    };
+
+                    request.onerror = function() {
+                        loadFallbackHistory(user);
+                    };
+                } else {
+                    loadFallbackHistory(user);
+                }
+            } catch (e) {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                loadFallbackHistory(user);
+            }
+        }
+
+        function loadFallbackHistory(user) {
+            const stored = localStorage.getItem('gameHistory');
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    allHistory = parsed.filter(h => h.userId === user.id || h.userId === user.uid);
+                } catch (e) {
+                    allHistory = [];
+                }
+            } else {
+                allHistory = [];
+            }
+            renderHistory();
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => filterByGame(btn.dataset.game));
+        });
+
+        loadTheme();
+        loadHistory();
+    </script>
+</body>
+</html>

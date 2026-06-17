@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Aviator - Stop Loss Assistant</title>
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .aviator-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .aviator-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .back-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .back-btn:hover { background: var(--bg-card-hover); color: #ef4444; }
+    .aviator-header-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #ef4444;
+      letter-spacing: -0.3px;
+    }
+    .aviator-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .header-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
+
+    .game-container {
+      padding: 0 0 100px;
+    }
+
+    .game-screen {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: linear-gradient(180deg, #0d1117 0%, #161b22 40%, #1a1e2e 100%);
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-color);
+    }
+    [data-theme="light"] .game-screen {
+      background: linear-gradient(180deg, #e8ecf0 0%, #d1d8e0 40%, #c5ccd4 100%);
+    }
+
+    .game-grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    [data-theme="light"] .game-grid-overlay {
+      background-image:
+        linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+    }
+
+    .crash-line {
+      position: absolute;
+      bottom: 40px;
+      left: 0;
+      right: 0;
+      height: 60%;
+      pointer-events: none;
+    }
+
+    .multiplier-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 5;
+    }
+    .multiplier-value {
+      font-size: 56px;
+      font-weight: 900;
+      color: #22c55e;
+      text-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+      line-height: 1;
+      letter-spacing: -2px;
+      font-variant-numeric: tabular-nums;
+    }
+    .multiplier-value.crashed {
+      color: #ef4444;
+      text-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+    }
+    .multiplier-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 8px;
+    }
+    [data-theme="light"] .multiplier-label {
+      color: rgba(0,0,0,0.4);
+    }
+
+    .game-status-text {
+      position: absolute;
+      bottom: 16px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      z-index: 5;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    [data-theme="light"] .game-status-text {
+      color: rgba(0,0,0,0.5);
+    }
+    .game-status-text.waiting { color: rgba(245, 158, 11, 0.9); }
+    .game-status-text.flying { color: rgba(34, 197, 94, 0.9); }
+    .game-status-text.crashed { color: rgba(239, 68, 68, 0.9); }
+
+    .game-controls {
+      padding: 16px;
+    }
+
+    .bet-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .bet-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .bet-input-wrap label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .bet-input {
+      width: 100%;
+      padding: 12px 14px;
+      padding-left: 30px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      transition: var(--transition);
+    }
+    .bet-input:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+    .bet-currency {
+      position: absolute;
+      bottom: 12px;
+      left: 10px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .bet-quick-btns {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .bet-quick {
+      flex: 1;
+      padding: 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .bet-quick:hover { border-color: #ef4444; color: #ef4444; }
+
+    .cashout-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .cashout-input-wrap {
+      flex: 1;
+    }
+    .cashout-input-wrap label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .cashout-input {
+      width: 100%;
+      padding: 12px 14px;
+      padding-left: 30px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      transition: var(--transition);
+    }
+    .cashout-input:focus {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+    }
+    .cashout-currency {
+      position: absolute;
+      bottom: 12px;
+      left: 10px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .play-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 17px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+    .play-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .play-btn.bet {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
+    }
+    .play-btn.bet:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(34, 197, 94, 0.45);
+    }
+    .play-btn.bet:active { transform: translateY(0); }
+    .play-btn.bet:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .play-btn.cashout {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+      animation: cashoutPulse 0.8s ease infinite;
+    }
+    .play-btn.cashout:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(245, 158, 11, 0.45);
+    }
+    .play-btn.crashed {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+    }
+    .play-btn.waiting {
+      background: linear-gradient(135deg, #64748b, #475569);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(100, 116, 139, 0.35);
+    }
+
+    @keyframes cashoutPulse {
+      0%, 100% { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35); }
+      50% { box-shadow: 0 6px 30px rgba(245, 158, 11, 0.55); }
+    }
+
+    .result-banner {
+      display: none;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+      animation: bannerSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .result-banner.win {
+      display: block;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
+    }
+    .result-banner.loss {
+      display: block;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    @keyframes bannerSlideIn {
+      from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title i { font-size: 12px; color: #ef4444; }
+
+    .balance-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .balance-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .balance-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #22c55e;
+      font-size: 16px;
+    }
+    .balance-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .balance-amount {
+      font-size: 20px;
+      font-weight: 800;
+      color: #22c55e;
+    }
+
+    .history-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 0 8px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin-bottom: 16px;
+    }
+    .history-scroll::-webkit-scrollbar { display: none; }
+
+    .history-chip {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid;
+      transition: var(--transition);
+      font-variant-numeric: tabular-nums;
+    }
+    .history-chip.win {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.25);
+      color: #22c55e;
+    }
+    .history-chip.loss {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #ef4444;
+    }
+
+    .pattern-signal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .pattern-signal::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(180deg, #8b5cf6, #3b82f6);
+      border-radius: 0 3px 3px 0;
+    }
+    .pattern-signal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .pattern-signal-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--purple);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pattern-signal-badge {
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--purple);
+    }
+    .pattern-signal-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .pattern-signal-recommendation {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pattern-signal-recommendation .score {
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .activity-log {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+    }
+    .activity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .activity-dot.win { background: #22c55e; }
+    .activity-dot.loss { background: #ef4444; }
+    .activity-dot.info { background: #3b82f6; }
+    .activity-text {
+      flex: 1;
+      color: var(--text-secondary);
+    }
+    .activity-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .empty-activity {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .game-content {
+      padding: 16px;
+    }
+
+    .plane-container {
+      position: absolute;
+      z-index: 4;
+      transition: none;
+      pointer-events: none;
+    }
+    .plane-svg {
+      width: 48px;
+      height: 48px;
+      filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.5));
+    }
+    [data-theme="light"] .plane-svg {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .crash-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(239, 68, 68, 0.3), transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .crash-flash.active {
+      animation: crashFlash 0.6s ease forwards;
+    }
+    @keyframes crashFlash {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .win-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(34, 197, 94, 0.3), transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .win-flash.active {
+      animation: winFlash 0.6s ease forwards;
+    }
+    @keyframes winFlash {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .game-screen.shake {
+      animation: screenShake 0.4s ease;
+    }
+    @keyframes screenShake {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-6px) rotate(-0.5deg); }
+      30% { transform: translateX(5px) rotate(0.4deg); }
+      45% { transform: translateX(-4px) rotate(-0.3deg); }
+      60% { transform: translateX(3px) rotate(0.2deg); }
+      75% { transform: translateX(-2px); }
+    }
+
+    .confetti-container {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 6;
+    }
+    .confetti {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      opacity: 0;
+    }
+
+    .multiplier-pulse {
+      animation: multPulse 0.5s ease infinite;
+    }
+    @keyframes multPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 64px;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 600;
+      transition: var(--transition);
+      border-radius: var(--radius-sm);
+      min-width: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item i { font-size: 20px; transition: var(--transition); }
+    .nav-item:hover { color: var(--accent); }
+    .nav-item.active { color: var(--accent); }
+    .nav-item.active i { transform: scale(1.15); }
+
+    @media (min-width: 480px) {
+      .multiplier-value { font-size: 72px; }
+      .plane-svg { width: 56px; height: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="app">
+    <header class="aviator-header">
+      <div class="aviator-header-left">
+        <button class="back-btn" onclick="window.location.href='user-games.html'" title="Back to Games">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="aviator-header-title">Aviator</span>
+      </div>
+      <div class="aviator-header-right">
+        <button class="header-btn" id="themeToggle" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="game-container">
+      <div class="game-screen" id="gameScreen">
+        <div class="game-grid-overlay"></div>
+
+        <svg class="crash-line" id="crashLine" viewBox="0 0 400 200" preserveAspectRatio="none">
+          <path id="crashPath" d="" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+          <path id="flyPath" d="" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-dasharray="8,4" opacity="0.6"/>
+        </svg>
+
+        <div class="crash-flash" id="crashFlash"></div>
+        <div class="win-flash" id="winFlash"></div>
+        <div class="confetti-container" id="confettiContainer"></div>
+
+        <div class="plane-container" id="planeContainer" style="display:none;">
+          <svg class="plane-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M52 12c-2 0-4 1-5.5 2.5L30 31l5 2L16 52l4-18 2 5 16.5-16.5C40 19.5 42 16 44 16h8V12z" fill="#ef4444"/>
+            <path d="M56 8L28 32l12 4-20 20 4-16L8 56l48-48z" fill="#ef4444" opacity="0.15"/>
+            <circle cx="48" cy="14" r="2" fill="#fff" opacity="0.6"/>
+          </svg>
+        </div>
+
+        <div class="multiplier-display">
+          <div class="multiplier-value" id="multiplierDisplay">1.00x</div>
+          <div class="multiplier-label" id="multiplierLabel">Place your bet</div>
+        </div>
+
+        <div class="game-status-text" id="gameStatusText">Waiting for next round...</div>
+      </div>
+
+      <div class="game-content">
+        <div class="result-banner" id="resultBanner"></div>
+
+        <div class="bet-section">
+          <div class="bet-input-wrap">
+            <label>Bet Amount</label>
+            <span class="bet-currency">$</span>
+            <input type="number" class="bet-input" id="betAmount" value="10" min="1" max="10000" step="1">
+            <div class="bet-quick-btns">
+              <button class="bet-quick" onclick="setBet(5)">$5</button>
+              <button class="bet-quick" onclick="setBet(10)">$10</button>
+              <button class="bet-quick" onclick="setBet(25)">$25</button>
+              <button class="bet-quick" onclick="setBet(50)">$50</button>
+              <button class="bet-quick" onclick="setBet(100)">$100</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cashout-section">
+          <div class="cashout-input-wrap">
+            <label>Auto Cashout At</label>
+            <span class="cashout-currency">x</span>
+            <input type="number" class="cashout-input" id="autoCashout" value="2.00" min="1.01" max="100.00" step="0.01">
+          </div>
+        </div>
+
+        <button class="play-btn bet" id="playBtn" onclick="handlePlay()">
+          Place Bet
+        </button>
+
+        <div style="margin-top:16px;">
+          <div class="balance-row">
+            <div class="balance-info">
+              <div class="balance-icon"><i class="fas fa-wallet"></i></div>
+              <div>
+                <div class="balance-label">Balance</div>
+                <div class="balance-amount" id="balanceDisplay">$1,000.00</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div class="balance-label">Last Win</div>
+              <div id="lastWinDisplay" style="font-size:15px;font-weight:700;color:var(--text-muted);">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div class="section-title"><i class="fas fa-clock-rotate-left"></i> Recent Results</div>
+          <div class="history-scroll" id="historyScroll"></div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div class="section-title"><i class="fas fa-robot"></i> Pattern Signal</div>
+          <div class="pattern-signal" id="patternSignal">
+            <div class="pattern-signal-header">
+              <span class="pattern-signal-title"><i class="fas fa-satellite-dish"></i> Bot Analysis</span>
+              <span class="pattern-signal-badge">AI</span>
+            </div>
+            <div class="pattern-signal-name" id="patternName">Loading...</div>
+            <div class="pattern-signal-recommendation" id="patternRecommendation">
+              <span>Analyzing patterns...</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title"><i class="fas fa-list-ul"></i> Activity Log</div>
+          <div class="activity-log" id="activityLog">
+            <div class="empty-activity">No activity yet. Place your first bet!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <a href="user-dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="user-games.html" class="nav-item active">
+        <i class="fas fa-gamepad"></i>
+        <span>Games</span>
+      </a>
+      <a href="user-bot.html" class="nav-item">
+        <i class="fas fa-robot"></i>
+        <span>Bot</span>
+      </a>
+      <a href="user-history.html" class="nav-item">
+        <i class="fas fa-history"></i>
+        <span>History</span>
+      </a>
+      <a href="user-profile.html" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../shared/db.js"></script>
+  <script src="../shared/auth.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    let currentUser = null;
+    let balance = 1000;
+    let gameState = 'idle';
+    let currentMultiplier = 1.00;
+    let crashPoint = 0;
+    let betAmount = 10;
+    let hasBet = false;
+    let gameInterval = null;
+    let resultHistory = [];
+    let activityItems = [];
+
+    const multiplierEl = document.getElementById('multiplierDisplay');
+    const labelEl = document.getElementById('multiplierLabel');
+    const statusEl = document.getElementById('gameStatusText');
+    const playBtn = document.getElementById('playBtn');
+    const gameScreen = document.getElementById('gameScreen');
+    const crashFlash = document.getElementById('crashFlash');
+    const winFlash = document.getElementById('winFlash');
+    const planeContainer = document.getElementById('planeContainer');
+    const crashPath = document.getElementById('crashPath');
+    const flyPath = document.getElementById('flyPath');
+    const confettiContainer = document.getElementById('confettiContainer');
+    const resultBanner = document.getElementById('resultBanner');
+    const historyScroll = document.getElementById('historyScroll');
+    const activityLog = document.getElementById('activityLog');
+
+    async function init() {
+      await app.init();
+      const session = await auth.validateSession();
+      if (!session) {
+        window.location.href = '../login.html';
+        return;
+      }
+      currentUser = session.user;
+      storage.setTheme(storage.getTheme());
+      updateThemeIcon();
+      await loadBalance();
+      await loadHistory();
+      await loadPattern();
+      renderHistory();
+      renderActivityLog();
+      generateCrashPoint();
+      startCountdown();
+    }
+
+    async function loadBalance() {
+      try {
+        const balances = await db.getByIndex('balances', 'userId', currentUser.userId);
+        if (balances.length > 0) {
+          const latest = balances.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+          balance = latest.amount || 1000;
+        }
+      } catch (e) {
+        balance = 1000;
+      }
+      updateBalanceDisplay();
+    }
+
+    async function saveBalance() {
+      try {
+        await db.put('balances', {
+          balanceId: app.generateId('bal'),
+          userId: currentUser.userId,
+          amount: balance,
+          date: new Date().toISOString()
+        });
+      } catch (e) {}
+    }
+
+    function updateBalanceDisplay() {
+      document.getElementById('balanceDisplay').textContent = '$' + balance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function setBet(amount) {
+      document.getElementById('betAmount').value = amount;
+    }
+
+    function updateThemeIcon() {
+      const icon = document.querySelector('#themeToggle i');
+      icon.className = storage.getTheme() === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      storage.toggleTheme();
+      updateThemeIcon();
+      app.toast('Theme updated', 'info');
+    });
+
+    function generateCrashPoint() {
+      const r = Math.random();
+      crashPoint = Math.max(1.00, Math.min(10.00, Math.floor((1 / (1 - r * 0.96)) * 100) / 100));
+      if (crashPoint < 1.10 && Math.random() < 0.3) crashPoint = 1.00;
+    }
+
+    function startCountdown() {
+      gameState = 'waiting';
+      statusEl.textContent = 'Waiting for next round...';
+      statusEl.className = 'game-status-text waiting';
+      multiplierEl.textContent = '1.00x';
+      multiplierEl.className = 'multiplier-value';
+      labelEl.textContent = 'Place your bet';
+      resultBanner.style.display = 'none';
+      playBtn.textContent = 'Place Bet';
+      playBtn.className = 'play-btn bet';
+      playBtn.disabled = false;
+      hasBet = false;
+      planeContainer.style.display = 'none';
+      crashPath.setAttribute('d', '');
+      flyPath.setAttribute('d', '');
+      let countdown = 3;
+      statusEl.textContent = 'Starting in ' + countdown + '...';
+      const cdInterval = setInterval(() => {
+        countdown--;
+        if (countdown <= 0) {
+          clearInterval(cdInterval);
+          startFlight();
+        } else {
+          statusEl.textContent = 'Starting in ' + countdown + '...';
+        }
+      }, 1000);
+    }
+
+    function startFlight() {
+      gameState = 'flying';
+      currentMultiplier = 1.00;
+      statusEl.textContent = 'Flew away!';
+      statusEl.className = 'game-status-text flying';
+      multiplierEl.className = 'multiplier-value multiplier-pulse';
+      labelEl.textContent = 'Cash out now!';
+      playBtn.textContent = hasBet ? 'Cash Out' : 'Waiting...';
+      playBtn.className = 'play-btn cashout';
+      playBtn.disabled = !hasBet;
+      planeContainer.style.display = 'block';
+
+      const screenW = gameScreen.offsetWidth;
+      const screenH = gameScreen.offsetHeight;
+      let pathPoints = [];
+      let tick = 0;
+
+      gameInterval = setInterval(() => {
+        tick++;
+        const increment = 0.01 + Math.random() * 0.035;
+        currentMultiplier += increment;
+        currentMultiplier = Math.round(currentMultiplier * 100) / 100;
+
+        const progress = Math.min((currentMultiplier - 1) / (crashPoint - 1 || 1), 1);
+        const planeX = 20 + progress * (screenW - 80);
+        const planeY = screenH - 60 - progress * (screenH - 120) * Math.pow(progress, 0.3);
+
+        planeContainer.style.left = (planeX - 24) + 'px';
+        planeContainer.style.top = (planeY - 24) + 'px';
+
+        const angle = Math.atan2(-1, 1 + progress * 0.5) * (180 / Math.PI);
+        planeContainer.style.transform = 'rotate(' + (-35 + progress * 10) + 'deg)';
+
+        pathPoints.push(planeX + ',' + planeY);
+        if (pathPoints.length > 1) {
+          flyPath.setAttribute('d', 'M' + pathPoints.join(' L'));
+        }
+
+        multiplierEl.textContent = currentMultiplier.toFixed(2) + 'x';
+
+        if (hasBet) {
+          playBtn.textContent = 'Cash Out $' + (betAmount * currentMultiplier).toFixed(2);
+          playBtn.disabled = false;
+        }
+
+        const autoCashout = parseFloat(document.getElementById('autoCashout').value) || 0;
+        if (hasBet && autoCashout > 0 && currentMultiplier >= autoCashout) {
+          cashOut(autoCashout);
+          return;
+        }
+
+        if (currentMultiplier >= crashPoint) {
+          triggerCrash();
+          return;
+        }
+      }, 80);
+    }
+
+    function cashOut(atMultiplier) {
+      if (gameState !== 'flying' || !hasBet) return;
+      hasBet = false;
+      const winAmount = betAmount * (atMultiplier || currentMultiplier);
+      balance += winAmount;
+      saveBalance();
+      updateBalanceDisplay();
+
+      const finalMult = atMultiplier || currentMultiplier;
+      resultBanner.className = 'result-banner win';
+      resultBanner.innerHTML = '<i class="fas fa-check-circle"></i> Cashed out at ' + finalMult.toFixed(2) + 'x &mdash; Won $' + winAmount.toFixed(2);
+      resultBanner.style.display = 'block';
+
+      document.getElementById('lastWinDisplay').textContent = '+$' + winAmount.toFixed(2);
+      document.getElementById('lastWinDisplay').style.color = '#22c55e';
+
+      multiplierEl.className = 'multiplier-value';
+      labelEl.textContent = 'Cashed out!';
+
+      playBtn.textContent = 'Cashed Out!';
+      playBtn.className = 'play-btn crashed';
+      playBtn.disabled = true;
+
+      winFlash.classList.add('active');
+      setTimeout(() => winFlash.classList.remove('active'), 600);
+
+      spawnConfetti();
+      addActivityResult('win', 'Cashed out at ' + finalMult.toFixed(2) + 'x for $' + winAmount.toFixed(2));
+      saveGameResult('win', finalMult, winAmount);
+      app.toast('Won $' + winAmount.toFixed(2) + '!', 'success');
+    }
+
+    function triggerCrash() {
+      gameState = 'crashed';
+      clearInterval(gameInterval);
+
+      multiplierEl.textContent = crashPoint.toFixed(2) + 'x';
+      multiplierEl.className = 'multiplier-value crashed';
+      labelEl.textContent = 'Crashed!';
+      statusEl.textContent = 'Crashed at ' + crashPoint.toFixed(2) + 'x';
+      statusEl.className = 'game-status-text crashed';
+
+      gameScreen.classList.add('shake');
+      setTimeout(() => gameScreen.classList.remove('shake'), 400);
+
+      crashFlash.classList.add('active');
+      setTimeout(() => crashFlash.classList.remove('active'), 600);
+
+      if (hasBet) {
+        balance -= betAmount;
+        saveBalance();
+        updateBalanceDisplay();
+
+        resultBanner.className = 'result-banner loss';
+        resultBanner.innerHTML = '<i class="fas fa-times-circle"></i> Crashed at ' + crashPoint.toFixed(2) + 'x &mdash; Lost $' + betAmount.toFixed(2);
+        resultBanner.style.display = 'block';
+
+        document.getElementById('lastWinDisplay').textContent = '-$' + betAmount.toFixed(2);
+        document.getElementById('lastWinDisplay').style.color = '#ef4444';
+
+        addActivityResult('loss', 'Crashed at ' + crashPoint.toFixed(2) + 'x, lost $' + betAmount.toFixed(2));
+        saveGameResult('loss', crashPoint, -betAmount);
+        app.toast('Lost $' + betAmount.toFixed(2), 'error');
+      } else {
+        addActivityResult('info', 'Round ended at ' + crashPoint.toFixed(2) + 'x');
+      }
+
+      hasBet = false;
+      resultHistory.unshift({ multiplier: crashPoint, won: gameState === 'won' });
+      if (resultHistory.length > 20) resultHistory.pop();
+      renderHistory();
+
+      playBtn.textContent = 'Next Round';
+      playBtn.className = 'play-btn bet';
+      playBtn.disabled = false;
+      playBtn.onclick = () => {
+        playBtn.onclick = handlePlay;
+        generateCrashPoint();
+        startCountdown();
+      };
+
+      setTimeout(() => {
+        generateCrashPoint();
+        startCountdown();
+      }, 5000);
+    }
+
+    function handlePlay() {
+      if (gameState === 'flying' && hasBet) {
+        cashOut();
+        return;
+      }
+
+      if (gameState === 'idle' || gameState === 'crashed' || gameState === 'waiting') {
+        betAmount = parseFloat(document.getElementById('betAmount').value) || 10;
+        if (betAmount < 1) betAmount = 1;
+        if (betAmount > balance) {
+          app.toast('Insufficient balance', 'error');
+          return;
+        }
+        balance -= betAmount;
+        saveBalance();
+        updateBalanceDisplay();
+        hasBet = true;
+        playBtn.textContent = 'Waiting...';
+        playBtn.className = 'play-btn waiting';
+        app.toast('Bet placed: $' + betAmount.toFixed(2), 'info');
+        return;
+      }
+    }
+
+    async function saveGameResult(type, multiplier, amount) {
+      try {
+        await db.put('results', {
+          resultId: app.generateId('res'),
+          userId: currentUser.userId,
+          gameType: 'aviator',
+          type: type,
+          multiplier: multiplier,
+          amount: amount,
+          betAmount: betAmount,
+          date: new Date().toISOString()
+        });
+
+        await db.put('history', {
+          historyId: app.generateId('hist'),
+          userId: currentUser.userId,
+          gameType: 'aviator',
+          details: type === 'win'
+            ? 'Won $' + amount.toFixed(2) + ' at ' + multiplier.toFixed(2) + 'x'
+            : 'Lost $' + Math.abs(amount).toFixed(2) + ' at ' + multiplier.toFixed(2) + 'x',
+          multiplier: multiplier,
+          amount: amount,
+          date: new Date().toISOString()
+        });
+      } catch (e) {}
+    }
+
+    async function loadHistory() {
+      try {
+        const all = await db.getByIndex('results', 'userId', currentUser.userId);
+        const aviatorResults = all.filter(r => r.gameType === 'aviator');
+        resultHistory = aviatorResults.slice(0, 15).map(r => ({
+          multiplier: r.multiplier,
+          won: r.type === 'win'
+        }));
+      } catch (e) {
+        resultHistory = [];
+      }
+    }
+
+    function renderHistory() {
+      historyScroll.innerHTML = '';
+      if (resultHistory.length === 0) {
+        historyScroll.innerHTML = '<div style="padding:8px 16px;color:var(--text-muted);font-size:13px;">No history yet</div>';
+        return;
+      }
+      resultHistory.forEach(r => {
+        const chip = document.createElement('div');
+        chip.className = 'history-chip ' + (r.won ? 'win' : 'loss');
+        chip.textContent = r.multiplier.toFixed(2) + 'x';
+        historyScroll.appendChild(chip);
+      });
+    }
+
+    function addActivityResult(type, text) {
+      activityItems.unshift({ type, text, time: new Date().toISOString() });
+      if (activityItems.length > 10) activityItems.pop();
+      renderActivityLog();
+    }
+
+    function renderActivityLog() {
+      activityLog.innerHTML = '';
+      if (activityItems.length === 0) {
+        activityLog.innerHTML = '<div class="empty-activity">No activity yet. Place your first bet!</div>';
+        return;
+      }
+      activityItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'activity-item';
+        div.innerHTML = `
+          <div class="activity-dot ${item.type}"></div>
+          <div class="activity-text">${escapeHtml(item.text)}</div>
+          <div class="activity-time">${app.timeAgo(item.time)}</div>
+        `;
+        activityLog.appendChild(div);
+      });
+    }
+
+    async function loadPattern() {
+      const nameEl = document.getElementById('patternName');
+      const recEl = document.getElementById('patternRecommendation');
+      try {
+        let patterns = await db.getByIndex('patterns', 'gameType', 'aviator');
+        if (patterns.length === 0) {
+          patterns = await db.getByIndex('patterns', 'category', 'Aviator');
+        }
+        if (patterns.length === 0) {
+          const all = await db.getAll('patterns');
+          patterns = all.filter(p =>
+            (p.gameType && p.gameType.toLowerCase().includes('aviator')) ||
+            (p.category && p.category.toLowerCase().includes('aviator'))
+          );
+        }
+        if (patterns.length > 0) {
+          patterns.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+          const top = patterns[0];
+          nameEl.textContent = escapeHtml(top.name || 'Aviator Pattern');
+          const score = top.matchScore || 0;
+          let recommendation = '';
+          if (score >= 70) recommendation = 'Strong buy signal detected';
+          else if (score >= 40) recommendation = 'Moderate confidence, use caution';
+          else recommendation = 'Low confidence, small bets recommended';
+          recEl.innerHTML = '<span>' + escapeHtml(recommendation) + '</span> <span class="score">' + score + '% match</span>';
+        } else {
+          nameEl.textContent = 'No patterns available';
+          recEl.innerHTML = '<span>Patterns will appear once added by admin</span>';
+        }
+      } catch (e) {
+        nameEl.textContent = 'Analyzing...';
+        recEl.innerHTML = '<span>Loading pattern data...</span>';
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    function spawnConfetti() {
+      confettiContainer.innerHTML = '';
+      const colors = ['#22c55e', '#f59e0b', '#3b82f6', '#8b5cf6', '#ef4444', '#06b6d4'];
+      for (let i = 0; i < 40; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'confetti';
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.left = (30 + Math.random() * 40) + '%';
+        particle.style.top = '40%';
+        particle.style.width = (4 + Math.random() * 6) + 'px';
+        particle.style.height = (4 + Math.random() * 6) + 'px';
+        particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        const dx = (Math.random() - 0.5) * 300;
+        const dy = -(100 + Math.random() * 200);
+        const dur = 800 + Math.random() * 600;
+        particle.style.animation = 'none';
+        particle.style.transition = 'all ' + dur + 'ms cubic-bezier(0.25, 0.8, 0.25, 1)';
+        confettiContainer.appendChild(particle);
+        requestAnimationFrame(() => {
+          particle.style.opacity = '1';
+          particle.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) rotate(' + (Math.random() * 720) + 'deg)';
+          setTimeout(() => {
+            particle.style.opacity = '0';
+            particle.style.transform = 'translate(' + dx + 'px, ' + (dy + 100) + 'px) rotate(' + (Math.random() * 1080) + 'deg)';
+          }, dur * 0.6);
+        });
+      }
+      setTimeout(() => { confettiContainer.innerHTML = ''; }, 1500);
+    }
+
+    init();
+  </script>
+</body>
+</html>
