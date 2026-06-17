@@ -16,7 +16,9 @@ const STORES = {
   results: { keyPath: 'resultId', indexes: ['userId', 'gameType', 'date'] },
   activityTimeline: { keyPath: 'activityId', indexes: ['userId', 'timestamp'] },
   backups: { keyPath: 'backupId', indexes: ['date'] },
-  errorLogs: { keyPath: 'errorId', indexes: ['timestamp'] }
+  errorLogs: { keyPath: 'errorId', indexes: ['timestamp'] },
+  wingoBets: { keyPath: 'betId', indexes: ['userId', 'date'] },
+  wingoResults: { keyPath: 'resultId', indexes: ['userId', 'date'] }
 };
 
 class Database {
